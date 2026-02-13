@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Modinity — Website vs Marketplace Fee Simulator</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <style>
+    input[type="range"] { accent-color: #4f46e5; }
+    .dark input[type="range"] { accent-color: #a78bfa; }
+    .rtl-range { direction: rtl; } /* left=100 right=0 */
+    /* Excel-like table styles */
+    .excel-table th, .excel-table td {
+      border: 1px solid #e2e8f0; /* slate-200 */
+    }
+    .dark .excel-table th, .dark .excel-table td {
+      border-color: #1e293b; /* slate-800 */
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+  <div class="max-w-none mx-auto px-4 md:px-8 py-6">
+
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div class="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+        <img src="https://modinity.com/cdn/shop/files/Modinity_logo_black-01_170x.png" 
+             alt="Modinity Logo" 
+             class="h-10 w-auto object-contain dark:invert" />
+        
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Fee Simulator <span class="text-slate-400 font-normal">| Website vs Marketplace</span>
+          </h1>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+             <p class="text-sm text-slate-500 dark:text-slate-400">
+               Adjust <span class="font-medium text-slate-700 dark:text-slate-200">Website share</span> & <span class="font-medium text-slate-700 dark:text-slate-200">Growth</span> to forecast savings.
+             </p>
+             <span class="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
+             <p class="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2 py-0.5 rounded-md inline-block">
+               Developed by Modinity Data & Business Intelligence Team
+             </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="exportBtn"
+          class="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 transition-colors">
+          <svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-spreadsheet"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
+          Export Excel
+        </button>
+
+        <button id="themeBtn"
+          class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:bg-slate-50
+                 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
+          <span id="themeLabel">Dark</span> mode
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm
+                  dark:border-slate-800 dark:bg-slate-900 flex flex-col h-full">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="font-semibold text-base">Assumptions</h2>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">
+              MP is blended. TapCart (App only). Midtrans/FreeShipping (Website+App).
+            </p>
+          </div>
+          <button id="resetBtn"
+            class="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium shadow-sm hover:bg-slate-50
+                   dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            Reset
+          </button>
+        </div>
+
+        <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3
+                    dark:border-slate-800 dark:bg-slate-950">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Baseline Dataset</div>
+          <div class="flex items-center gap-2">
+            <label class="flex-1 cursor-pointer">
+              <input type="radio" name="dataset" id="dsDay1" class="peer hidden" />
+              <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center shadow-sm transition-all
+                          peer-checked:border-indigo-500 peer-checked:ring-1 peer-checked:ring-indigo-500 peer-checked:text-indigo-600
+                          dark:border-slate-800 dark:bg-slate-900 dark:peer-checked:ring-indigo-400 dark:peer-checked:text-indigo-400">
+                <div class="text-sm font-semibold">Ramadan Day 1</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">1 Mar 2025</div>
+              </div>
+            </label>
+            <label class="flex-1 cursor-pointer">
+              <input type="radio" name="dataset" id="dsMonth" class="peer hidden" checked />
+              <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center shadow-sm transition-all
+                          peer-checked:border-indigo-500 peer-checked:ring-1 peer-checked:ring-indigo-500 peer-checked:text-indigo-600
+                          dark:border-slate-800 dark:bg-slate-900 dark:peer-checked:ring-indigo-400 dark:peer-checked:text-indigo-400">
+                <div class="text-sm font-semibold">Full Month</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">1–31 Mar 2025</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 dark:bg-indigo-950/30 dark:border-indigo-900/50">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-bold text-indigo-900 dark:text-indigo-200">Global Website Share</div>
+            <div class="text-sm font-bold text-indigo-600 dark:text-indigo-400" id="globalShareLabel">—</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-medium text-indigo-700 dark:text-indigo-300">100% Website</span>
+            <input id="globalOwnedShare" type="range" min="0" max="100" value="0" class="flex-1 h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer dark:bg-indigo-800 rtl-range" />
+            <span class="text-[10px] font-medium text-indigo-700 dark:text-indigo-300">0%</span>
+          </div>
+          <p class="text-[10px] text-indigo-500/80 mt-1 text-center font-medium">Slide left to increase Website share</p>
+        </div>
+
+        <div class="mt-4 space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-medium text-slate-600 dark:text-slate-400">Projected Sales Growth (%)</label>
+              <div class="flex items-center gap-2">
+                <label for="growthCustomToggle" class="text-[10px] text-slate-500 cursor-pointer select-none">Custom (>100%)</label>
+                <input type="checkbox" id="growthCustomToggle" class="accent-indigo-600 h-3 w-3 cursor-pointer" />
+              </div>
+            </div>
+
+            <div id="growthSliderContainer" class="block">
+              <div class="flex items-center gap-3">
+                <span class="text-[10px] text-slate-400 w-8 text-right">-100%</span>
+                <input id="growthSlider" type="range" min="-100" max="100" value="0" 
+                       class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-800 accent-indigo-500" />
+                <span class="text-[10px] text-slate-400 w-8">100%</span>
+                <div class="w-12 text-right text-xs font-bold text-indigo-600 dark:text-indigo-400" id="growthSliderVal">0%</div>
+              </div>
+            </div>
+
+            <div id="growthInputContainer" class="hidden">
+              <input id="growthInput" type="number" value="0" placeholder="Enter growth %"
+                     class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
+                            focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-2">
+             <div>
+                <label class="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">MP Fee 2025 (%)</label>
+                <input id="mpFeePct" value="14" inputmode="decimal"
+                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
+                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" 
+                  title="Used for Baseline Calculation"/>
+             </div>
+             <div>
+                <label class="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">MP Fee 2026 (%)</label>
+                <input id="mpFeePctProj" value="18" inputmode="decimal"
+                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
+                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" 
+                  title="Used for Projected Calculation"/>
+             </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <label class="text-xs font-medium text-slate-600 dark:text-slate-400 w-1/2">TapCart Fee (%)</label>
+            <input id="tapcartPct" value="0.07" inputmode="decimal"
+              class="w-1/2 rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
+                     focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+          </div>
+
+          <div class="flex items-center gap-3">
+            <label class="text-xs font-medium text-slate-600 dark:text-slate-400 w-1/2">Midtrans (IDR/trx)</label>
+            <input id="midtransPerTrx" value="7,500" inputmode="numeric"
+              class="w-1/2 rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
+                     focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-600 dark:text-slate-400">Free Shipping (Website)</label>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+               <div>
+                  <div class="text-[10px] text-slate-400 mb-1">Eligible %</div>
+                  <input id="fsEligiblePct" value="67" inputmode="decimal"
+                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
+                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+               </div>
+               <div>
+                  <div class="text-[10px] text-slate-400 mb-1">Avg Subsidy (Rp)</div>
+                  <input id="fsAvgSubsidy" value="40,000" inputmode="numeric"
+                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
+                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm
+                  dark:border-slate-800 dark:bg-slate-900 lg:col-span-2 flex flex-col">
+        
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">Executive Summary</h2>
+          <select id="summaryFilter" 
+                  class="text-sm border border-slate-200 rounded-lg px-2 py-1 bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-slate-900 dark:border-slate-800">
+            <option value="ALL">Total (All Brands)</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-2">
+          
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-2">
+            <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Projected Sales</div>
+            <div id="sumTotalSales" class="text-lg font-bold mt-1 tracking-tight text-slate-900 dark:text-white">—</div>
+            <div class="text-[10px] text-slate-500 mt-1">
+              Website: <span id="sumOwnedShare" class="font-semibold text-slate-700 dark:text-slate-300">—</span> • 
+              MP: <span id="sumMpShare" class="font-semibold text-slate-700 dark:text-slate-300">—</span>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
+            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Projected Website Sales</div>
+            <div id="sumProjOwnedSales" class="text-sm font-semibold mt-1 text-slate-900 dark:text-white truncate">—</div>
+            <div id="sumProjOwnedGrowth" class="text-[10px] font-medium mt-0.5">—</div>
+            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+               <div class="text-[9px] text-slate-400">Fee</div>
+               <div id="sumProjOwnedFee" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">—</div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
+            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Projected MP Sales</div>
+            <div id="sumProjMpSales" class="text-sm font-semibold mt-1 text-slate-900 dark:text-white truncate">—</div>
+            <div id="sumProjMpGrowth" class="text-[10px] font-medium mt-0.5">—</div>
+            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+               <div class="text-[9px] text-slate-400">Fee</div>
+               <div id="sumProjMpFee" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">—</div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
+            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Baseline Fee</div>
+            <div id="overallBase" class="text-sm font-semibold mt-1 truncate">—</div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
+            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Projected Fee</div>
+            <div id="overallProj" class="text-sm font-semibold mt-1 truncate">—</div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-slate-900 p-4 text-white dark:border-slate-800 dark:bg-indigo-600 md:col-span-2 flex flex-col justify-center">
+            <div class="text-xs font-medium text-white/70 uppercase tracking-wide">Net Delta</div>
+            <div id="overallDelta" class="text-2xl font-bold mt-1 tracking-tight">—</div>
+            <div id="overallDeltaPct" class="text-sm font-medium mt-1 opacity-90">—</div>
+          </div>
+          
+          <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-4 dark:border-slate-800 dark:bg-slate-800/50 md:col-span-4 flex flex-col justify-center">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="h-2 w-2 rounded-full bg-indigo-500"></div>
+              <div class="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-400">
+                Dynamic Insight
+              </div>
+            </div>
+            <div id="insightText" class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+              Loading...
+            </div>
+          </div>
+
+        </div>
+
+        <div class="mt-6 flex-1 w-full min-h-[200px]">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm
+                dark:border-slate-800 dark:bg-slate-900 mb-8 overflow-hidden">
+      <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+        <h2 class="text-base font-bold">A) Inputs & Configuration</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Baseline sales + transactions by channel. Use the sliders to adjust projected Website share per brand.
+        </p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="excel-table w-full text-xs md:text-sm table-fixed min-w-[1000px] border-collapse">
+          <thead class="bg-white text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+            <tr>
+              <th class="text-left px-4 py-3 w-[140px] font-semibold bg-slate-50 dark:bg-slate-900">Brand</th>
+              <th class="text-right px-2 py-3 w-[80px] font-medium bg-slate-50 dark:bg-slate-900">Shopify%</th>
+              <th class="text-right px-2 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">Web Sales</th>
+              <th class="text-right px-2 py-3 w-[90px] font-medium bg-slate-50 dark:bg-slate-900">Web Trx</th>
+              <th class="text-right px-2 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">App Sales</th>
+              <th class="text-right px-2 py-3 w-[90px] font-medium bg-slate-50 dark:bg-slate-900">App Trx</th>
+              <th class="text-right px-2 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">MP Sales</th>
+              <th class="text-right px-2 py-3 w-[90px] font-medium bg-slate-50 dark:bg-slate-900">MP Trx</th>
+              <th class="text-left px-4 py-3 w-[300px] font-semibold bg-slate-50 dark:bg-slate-900">Projected Website Share</th>
+            </tr>
+          </thead>
+          <tbody id="inputRows" class="bg-white dark:bg-slate-950">
+             </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm
+                dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+      <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+        <h2 class="text-base font-bold">B) Detailed Projections</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Projected channel split and fee breakdown based on your inputs.
+        </p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="excel-table w-full text-xs md:text-sm table-fixed min-w-[1000px] border-collapse">
+          <thead class="bg-white text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+            <tr>
+              <th class="text-left px-4 py-3 w-[140px] font-semibold bg-slate-50 dark:bg-slate-900">Brand</th>
+              <th class="text-right px-4 py-3 w-[260px] font-medium bg-slate-50 dark:bg-slate-900">Projected Sales Breakdown</th>
+              <th class="text-right px-4 py-3 w-[240px] font-medium bg-slate-50 dark:bg-slate-900">Projected Trx Breakdown</th>
+              <th class="text-right px-4 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">Baseline Fee</th>
+              <th class="text-right px-4 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">Projected Fee</th>
+              <th class="text-right px-4 py-3 w-[130px] font-medium bg-slate-50 dark:bg-slate-900">Δ Fee</th>
+              <th class="text-right px-4 py-3 w-[100px] font-medium bg-slate-50 dark:bg-slate-900">Δ %</th>
+            </tr>
+          </thead>
+          <tbody id="resultRows" class="bg-white dark:bg-slate-950"></tbody>
+        </table>
+      </div>
+      <div class="p-4 bg-slate-50 dark:bg-slate-950/30 text-[10px] text-slate-400">
+        * Projections assume constant total sales per brand. Transaction counts are estimated using baseline AOV per channel.
+      </div>
+    </div>
+  </div>
+
+<script>
+// Register the DataLabels plugin
+Chart.register(ChartDataLabels);
+
+/* -----------------------------
+   Brand meta
+----------------------------- */
+const BRANDS = [
+  { code: "BS",  name: "Buttonscarves",        shopifyPct: 0.40 },
+  { code: "BSB", name: "Buttonscarves Beauty", shopifyPct: 0.40 },
+  { code: "NP",  name: "Nada Puspita",         shopifyPct: 0.40 },
+  { code: "TYGA",name: "TYGA",                 shopifyPct: 0.40 },
+  { code: "BJ",  name: "Benang Jarum",         shopifyPct: 0.45 },
+  { code: "ZD",  name: "ZytaDelia",            shopifyPct: 1.00 },
+  { code: "CL",  name: "Calla",                shopifyPct: 1.00 }
+];
+
+/* -----------------------------
+   Datasets
+----------------------------- */
+const DATASET_DAY1 = {
+  BS:   { web: 402538502, web_trx: 162, app: 87819820,  app_trx: 130, mp: 5999411685, mp_trx: 12788 },
+  BSB:  { web:   3841667, web_trx:  24, app:  1739865,  app_trx:   7, mp:   93033295, mp_trx:   311 },
+  NP:   { web:  14444054, web_trx:  24, app:        0,  app_trx:   0, mp:   99697072, mp_trx:   276 },
+  BJ:   { web: 116238514, web_trx:  81, app: 22578829,  app_trx:  18, mp:  289592466, mp_trx:   509 },
+  ZD:   { web:    841757, web_trx:   3, app:        0,  app_trx:   0, mp:  119822728, mp_trx:   490 },
+  CL:   { web:   1465000, web_trx:   2, app:        0,  app_trx:   0, mp:    1409910, mp_trx:     2 },
+  TYGA: { web:         0, web_trx:   0, app:        0,  app_trx:   0, mp:          0, mp_trx:     0 }
+};
+
+const DATASET_MONTH = {
+  BJ:   { mp:  7208647358, mp_trx: 13320, app:  720822297, app_trx:  615, web: 2360790991, web_trx: 1951 },
+  BS:   { mp: 38891831982, mp_trx:112843, app: 4746277876, app_trx: 5623, web: 7233265134, web_trx: 3816 },
+  BSB:  { mp:  4319044729, mp_trx: 17062, app:  134812634, app_trx: 1499, web:  165088324, web_trx: 1413 },
+  CL:   { mp:    83882450, mp_trx:   129, app:          0, app_trx:    0, web:  100296790, web_trx:  158 },
+  NP:   { mp:  5176555186, mp_trx: 12489, app:          0, app_trx:    0, web: 1907254189, web_trx: 2362 },
+  ZD:   { mp:  5411771884, mp_trx: 23298, app:          0, app_trx:    0, web:  314254633, web_trx:  477 },
+  TYGA: { mp:          0, mp_trx:     0, app:          0, app_trx:    0, web:          0, web_trx:    0 }
+};
+
+// Set Full Month as default
+let ACTIVE_DATASET = DATASET_MONTH;
+
+/* -----------------------------
+   Helpers
+----------------------------- */
+const el = id => document.getElementById(id);
+
+function parseNumber(str) {
+  const s = String(str ?? "").replace(/,/g, "").trim();
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+function fmtNumber(n) { return Math.round(n).toLocaleString("en-US"); }
+function fmtIDR(n) { return "Rp " + fmtNumber(n); }
+function fmtDeltaPct(n) { const sign = n >= 0 ? "+" : ""; return sign + n.toFixed(1) + "%"; }
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+const compactFmt = new Intl.NumberFormat('en-US', {
+  style: 'currency', currency: 'IDR', notation: 'compact', maximumFractionDigits: 1
+});
+function fmtCompact(n) {
+  let s = compactFmt.format(n);
+  return s.replace('IDR', 'Rp');
+}
+
+function attachNumberFormatting(input) {
+  input.addEventListener("blur", () => input.value = fmtNumber(parseNumber(input.value)));
+  input.addEventListener("focus", () => { input.value = String(parseNumber(input.value)); input.select(); });
+}
+
+/* -----------------------------
+   Growth Logic (Slider vs Input)
+----------------------------- */
+const growthSlider = el("growthSlider");
+const growthInput = el("growthInput");
+const growthToggle = el("growthCustomToggle");
+const growthSliderContainer = el("growthSliderContainer");
+const growthInputContainer = el("growthInputContainer");
+const growthSliderVal = el("growthSliderVal");
+
+// Sync functions
+function updateGrowthDisplay() {
+  growthSliderVal.textContent = `${growthSlider.value}%`;
+  recalc();
+}
+
+growthSlider.addEventListener("input", updateGrowthDisplay);
+
+growthToggle.addEventListener("change", () => {
+  if (growthToggle.checked) {
+    // Switch to Input
+    growthSliderContainer.classList.add("hidden");
+    growthInputContainer.classList.remove("hidden");
+    growthInput.value = growthSlider.value; // Sync value
+  } else {
+    // Switch to Slider
+    growthInputContainer.classList.add("hidden");
+    growthSliderContainer.classList.remove("hidden");
+    // Clamp value to -100 / 100 for slider
+    let val = parseNumber(growthInput.value);
+    if (val > 100) val = 100;
+    if (val < -100) val = -100;
+    growthSlider.value = val;
+    updateGrowthDisplay();
+  }
+  recalc();
+});
+
+growthInput.addEventListener("input", recalc);
+
+// Get current effective growth value
+function getGrowthValue() {
+  if (growthToggle.checked) {
+    return parseNumber(growthInput.value);
+  } else {
+    return parseNumber(growthSlider.value);
+  }
+}
+
+
+/* -----------------------------
+   Logic
+----------------------------- */
+function projTrx(projectedSales, baseSales, baseTrx) {
+  const trx = Number(baseTrx) || 0;
+  const sales = Number(baseSales) || 0;
+  if (trx <= 0 || sales <= 0) return 0;
+  const aov = sales / trx;
+  if (aov <= 0) return 0;
+  return projectedSales / aov;
+}
+
+function calcBrand({
+  web, web_trx, app, app_trx, mp, mp_trx,
+  shopifyPct, mpPct, mpPctProj, tapcartPct, midtransPerTrx,
+  fsEligiblePct, fsAvgSubsidy,
+  ownedSharePct, growthPct
+}) {
+  const baseTotalSales = web + app + mp;
+  const baseOwned = web + app;
+  const baseMp = mp;
+  
+  // Apply Growth to Total Sales
+  const growthFactor = 1 + (growthPct / 100);
+  const projTotalSales = baseTotalSales * growthFactor;
+
+  // Split projected total sales based on slider
+  const ownedShare = clamp01(ownedSharePct / 100);
+  const ownedP = projTotalSales * ownedShare;
+  const mpP = projTotalSales - ownedP;
+
+  // Split Owned into Web vs App (maintain baseline ratio)
+  const appRatio = baseOwned > 0 ? (app / baseOwned) : 0;
+  const webRatio = 1 - appRatio;
+  const appP = ownedP * appRatio;
+  const webP = ownedP * webRatio;
+
+  // Project Transactions
+  const webTrxP = projTrx(webP, web, web_trx);
+  const appTrxP = projTrx(appP, app, app_trx);
+  const mpTrxP  = projTrx(mpP,  mp,  mp_trx);
+
+  // --- BASELINE FEES ---
+  const baseShopify  = (shopifyPct/100) * (web + app);
+  const baseTapcart  = (tapcartPct/100) * app;
+  const baseMidtrans = midtransPerTrx * (web_trx + app_trx);
+  const baseFreeShip = (fsEligiblePct/100) * (web_trx + app_trx) * fsAvgSubsidy;
+  const baseMpFee    = (mpPct/100) * mp; 
+  const baseFee = baseShopify + baseTapcart + baseMidtrans + baseFreeShip + baseMpFee;
+
+  // --- PROJECTED FEES ---
+  const projShopify  = (shopifyPct/100) * (webP + appP);
+  const projTapcart  = (tapcartPct/100) * appP;
+  const projMidtrans = midtransPerTrx * (webTrxP + appTrxP);
+  const projFreeShip = (fsEligiblePct/100) * (webTrxP + appTrxP) * fsAvgSubsidy;
+  const projMpFee    = (mpPctProj/100) * mpP; 
+  const projFee = projShopify + projTapcart + projMidtrans + projFreeShip + projMpFee;
+
+  // Split Fees (Website+App vs MP)
+  const projFeeOwned = projShopify + projTapcart + projMidtrans + projFreeShip;
+  const projFeeMp    = projMpFee;
+
+  const delta = projFee - baseFee;
+  const deltaPct = baseFee ? (delta / baseFee) * 100 : 0;
+
+  return { webP, appP, mpP, webTrxP, appTrxP, mpTrxP, baseFee, projFee, projFeeOwned, projFeeMp, delta, deltaPct, totalSales: projTotalSales, baseOwned, baseMp };
+}
+
+/* -----------------------------
+   Build DOM
+----------------------------- */
+function buildTables() {
+  const inputTbody = el("inputRows");
+  const resultTbody = el("resultRows");
+  const filterSelect = el("summaryFilter");
+  
+  inputTbody.innerHTML = "";
+  resultTbody.innerHTML = "";
+  filterSelect.innerHTML = '<option value="ALL">Total (All Brands)</option>';
+
+  // 1. Create TOTAL Row in Input Table (First Row)
+  const totalRow = document.createElement("tr");
+  totalRow.className = "bg-indigo-50 dark:bg-slate-900 font-bold border-b-2 border-slate-200 dark:border-slate-800";
+  totalRow.id = "inputTotalRow";
+  // We will populate values in recalc()
+  totalRow.innerHTML = `
+      <td class="px-4 py-3">Total</td>
+      <td class="px-2 py-3 text-right text-xs text-slate-400">—</td>
+      <td class="px-2 py-3 text-right text-xs" id="totWebSales">0</td>
+      <td class="px-2 py-3 text-right text-xs" id="totWebTrx">0</td>
+      <td class="px-2 py-3 text-right text-xs" id="totAppSales">0</td>
+      <td class="px-2 py-3 text-right text-xs" id="totAppTrx">0</td>
+      <td class="px-2 py-3 text-right text-xs" id="totMpSales">0</td>
+      <td class="px-2 py-3 text-right text-xs" id="totMpTrx">0</td>
+      <td class="px-4 py-3 text-slate-400 text-xs text-center font-normal italic">Uneditable</td>
+  `;
+  inputTbody.appendChild(totalRow);
+
+  BRANDS.forEach((b) => {
+    // Add option to Dropdown
+    const opt = document.createElement("option");
+    opt.value = b.code;
+    opt.textContent = b.name;
+    filterSelect.appendChild(opt);
+
+    const d0 = ACTIVE_DATASET[b.code] || { web:0, web_trx:0, app:0, app_trx:0, mp:0, mp_trx:0 };
+    const d = {
+      web: d0.web || 0, web_trx: d0.web_trx || 0,
+      app: d0.app || 0, app_trx: d0.app_trx || 0,
+      mp:  d0.mp  || 0, mp_trx:  d0.mp_trx  || 0
+    };
+
+    const total = d.web + d.app + d.mp;
+    const owned = d.web + d.app;
+    const baselineOwnedShare = total ? Math.round((owned / total) * 100) : 0;
+
+    const tri = document.createElement("tr");
+    tri.className = "hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors";
+    tri.setAttribute("data-brand-code", b.code); 
+    tri.innerHTML = `
+      <td class="px-4 py-3 align-top">
+        <div class="font-bold text-slate-800 dark:text-slate-100">${b.code}</div>
+        <div class="text-[10px] text-slate-400 truncate">${b.name}</div>
+      </td>
+      <td class="px-2 py-3 text-right align-top text-slate-500">${b.shopifyPct.toFixed(2)}%</td>
+      <td class="px-2 py-3 text-right"><input data-k="web" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.web)}" /></td>
+      <td class="px-2 py-3 text-right"><input data-k="web_trx" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.web_trx)}" /></td>
+      <td class="px-2 py-3 text-right"><input data-k="app" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.app)}" /></td>
+      <td class="px-2 py-3 text-right"><input data-k="app_trx" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.app_trx)}" /></td>
+      <td class="px-2 py-3 text-right"><input data-k="mp" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.mp)}" /></td>
+      <td class="px-2 py-3 text-right"><input data-k="mp_trx" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.mp_trx)}" /></td>
+      <td class="px-4 py-3 align-middle">
+        <div class="flex items-center gap-2">
+          <div class="text-[9px] text-slate-400 w-16">100% Web</div>
+          <div class="flex items-center gap-2 flex-1">
+            <input data-k="ownedshare" type="range" min="0" max="100" value="${baselineOwnedShare}" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer rtl-range dark:bg-slate-800" />
+            <span data-k="ownedshareLabel" class="w-14 text-right font-bold text-indigo-600 dark:text-indigo-400">${baselineOwnedShare}% Web</span>
+          </div>
+          <div class="text-[9px] text-slate-400 w-12 text-right">0% Web</div>
+        </div>
+      </td>
+    `;
+
+    // Detailed Projection Row
+    const trr = document.createElement("tr");
+    trr.setAttribute("data-brand-code", b.code);
+    trr.innerHTML = `
+      <td class="px-4 py-3 align-top">
+        <div class="font-bold text-slate-800 dark:text-slate-100">${b.code}</div>
+        <div class="text-[10px] text-slate-400 truncate">${b.name}</div>
+      </td>
+      <td class="px-4 py-3 text-right">
+        <div class="grid grid-cols-[25px_1fr] gap-x-2 text-xs leading-5">
+           <span class="text-slate-400 text-left">Web</span> <span class="font-medium text-slate-700 dark:text-slate-200" data-k="pweb">—</span>
+           <span class="text-slate-400 text-left">App</span> <span class="font-medium text-slate-700 dark:text-slate-200" data-k="papp">—</span>
+           <span class="text-slate-400 text-left">MP</span>  <span class="font-medium text-slate-700 dark:text-slate-200" data-k="pmp">—</span>
+        </div>
+      </td>
+      <td class="px-4 py-3 text-right">
+        <div class="grid grid-cols-[25px_1fr] gap-x-2 text-xs leading-5">
+           <span class="text-slate-400 text-left">Web</span> <span class="font-medium" data-k="ptweb">—</span>
+           <span class="text-slate-400 text-left">App</span> <span class="font-medium" data-k="ptapp">—</span>
+           <span class="text-slate-400 text-left">MP</span>  <span class="font-medium" data-k="ptmp">—</span>
+        </div>
+      </td>
+      <td class="px-4 py-3 text-right text-slate-500" data-k="base">—</td>
+      <td class="px-4 py-3 text-right font-medium text-slate-900 dark:text-white" data-k="proj">—</td>
+      <td class="px-4 py-3 text-right font-medium" data-k="delta">—</td>
+      <td class="px-4 py-3 text-right font-bold" data-k="deltapct">—</td>
+    `;
+
+    inputTbody.appendChild(tri);
+    resultTbody.appendChild(trr);
+
+    const fmtInputs = [tri.querySelector('[data-k="web"]'), tri.querySelector('[data-k="web_trx"]'), tri.querySelector('[data-k="app"]'), tri.querySelector('[data-k="app_trx"]'), tri.querySelector('[data-k="mp"]'), tri.querySelector('[data-k="mp_trx"]')];
+    fmtInputs.forEach(attachNumberFormatting);
+    const shareInput = tri.querySelector('[data-k="ownedshare"]');
+    const shareLabel = tri.querySelector('[data-k="ownedshareLabel"]');
+    shareInput.addEventListener("input", () => { shareLabel.textContent = `${shareInput.value}% Web`; recalc(); });
+    function snapShareToBaseline() {
+      const w = parseNumber(tri.querySelector('[data-k="web"]').value);
+      const a = parseNumber(tri.querySelector('[data-k="app"]').value);
+      const m = parseNumber(tri.querySelector('[data-k="mp"]').value);
+      const t = w + a + m;
+      const baseline = t ? Math.round(((w+a)/t)*100) : 0;
+      shareInput.value = String(baseline);
+      shareLabel.textContent = `${baseline}% Web`;
+    }
+    fmtInputs.forEach(inp => inp.addEventListener("input", () => { snapShareToBaseline(); recalc(); }));
+    tri.__resultRow = trr;
+    tri.__brandMeta = b;
+  });
+
+  // Re-attach filter listener after rebuild
+  el("summaryFilter").addEventListener("change", recalc);
+}
+
+/* -----------------------------
+   CHART Config with DataLabels (Updated Logic)
+----------------------------- */
+const barChart = new Chart(el("barChart"), {
+  type: "bar",
+  data: {
+    labels: ["Baseline Fee", "Variance", "Projected Fee"],
+    datasets: [{
+      label: "Fee",
+      data: [0, [0,0], 0],
+      backgroundColor: ["#94a3b8", "#10b981", "#3b82f6"],
+      borderRadius: 6,
+      barPercentage: 0.6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { top: 30, bottom: 5, left: 0, right: 0 } }, 
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+             if (ctx.dataIndex === 1) {
+                const base = ctx.chart.data.datasets[0].data[0][1];
+                const proj = ctx.chart.data.datasets[0].data[2][1];
+                return "Diff: " + fmtIDR(proj - base);
+             }
+             return fmtIDR(Array.isArray(ctx.raw) ? ctx.raw[1] : ctx.raw);
+          }
+        }
+      },
+      datalabels: {
+        anchor: (ctx) => {
+          if (ctx.dataIndex !== 1) return 'center'; 
+          const ds = ctx.chart.data.datasets[0].data;
+          const base = ds[0][1];
+          const proj = ds[2][1];
+          const diffPct = Math.abs((proj - base) / base);
+          return (diffPct <= 0.20) ? 'end' : 'center';
+        },
+        align: (ctx) => {
+          if (ctx.dataIndex !== 1) return 'center';
+          const ds = ctx.chart.data.datasets[0].data;
+          const base = ds[0][1];
+          const proj = ds[2][1];
+          const diffPct = Math.abs((proj - base) / base);
+          return (diffPct <= 0.20) ? 'end' : 'center';
+        },
+        color: (ctx) => {
+           const dark = document.documentElement.classList.contains("dark");
+           if (ctx.dataIndex !== 1) return 'white';
+           const ds = ctx.chart.data.datasets[0].data;
+           const base = ds[0][1];
+           const proj = ds[2][1];
+           const diffPct = Math.abs((proj - base) / base);
+           // When variance is small we place label near the end; use a theme-aware dark/light text.
+           if (diffPct <= 0.20) return dark ? '#e2e8f0' : '#334155';
+           return 'white';
+        },
+        font: { weight: 'bold', size: 10, family: 'sans-serif' },
+        textAlign: 'center',
+        clip: false,
+        formatter: (value, ctx) => {
+          const idx = ctx.dataIndex;
+          const ds = ctx.chart.data.datasets[0].data;
+          const baseVal = ds[0][1];
+
+          let val = 0;
+          if (idx === 1) {
+            const projVal = ds[2][1];
+            val = projVal - baseVal;
+          } else if (Array.isArray(value)) {
+            val = value[1];
+          } else {
+            val = value;
+          }
+
+          const valStr = fmtCompact(val);
+          if (idx === 0) return valStr;
+
+          const delta = (idx === 1) ? val : (val - baseVal);
+          const pct = baseVal ? (delta / baseVal * 100) : 0;
+          const pctStr = fmtDeltaPct(pct);
+
+          return `${valStr}\n(${pctStr})`;
+        }
+      }
+    },
+    scales: {
+      y: { ticks: { callback: (v) => fmtCompact(v), font: {size: 10} }, grid: { color: '#f1f5f9' }, border: {display: false} },
+      x: { grid: { display: false }, border: {display: false}, ticks: { font: {weight: 'bold'} } }
+    }
+  }
+});
+
+/* -----------------------------
+   Chart Theme (Light/Dark)
+----------------------------- */
+function applyChartTheme() {
+  const dark = document.documentElement.classList.contains("dark");
+
+  // Improve readability in dark mode: ticks, grid, tooltip colors.
+  const tickColor = dark ? "#cbd5e1" : "#334155";      // slate-300 / slate-700
+  const gridColor = dark ? "rgba(148,163,184,0.18)" : "#f1f5f9"; // subtle in dark
+  const tooltipBg = dark ? "rgba(2,6,23,0.92)" : "rgba(255,255,255,0.95)";
+  const tooltipBorder = dark ? "rgba(148,163,184,0.25)" : "rgba(148,163,184,0.35)";
+  const tooltipText = dark ? "#e2e8f0" : "#0f172a";
+
+  barChart.options.scales.y.ticks.color = tickColor;
+  barChart.options.scales.x.ticks.color = tickColor;
+  barChart.options.scales.y.grid.color = gridColor;
+
+  barChart.options.plugins.tooltip.backgroundColor = tooltipBg;
+  barChart.options.plugins.tooltip.borderColor = tooltipBorder;
+  barChart.options.plugins.tooltip.borderWidth = 1;
+  barChart.options.plugins.tooltip.titleColor = tooltipText;
+  barChart.options.plugins.tooltip.bodyColor = tooltipText;
+
+  barChart.update();
+}
+
+
+/* -----------------------------
+   Recalc
+----------------------------- */
+function recalc() {
+  const mpPct = parseNumber(el("mpFeePct").value);       
+  const mpPctProj = parseNumber(el("mpFeePctProj").value); 
+  const tapcartPct = parseNumber(el("tapcartPct").value);
+  const midtransPerTrx = parseNumber(el("midtransPerTrx").value);
+  const fsEligiblePct = parseNumber(el("fsEligiblePct").value);
+  const fsAvgSubsidy = parseNumber(el("fsAvgSubsidy").value);
+  const growthPct = getGrowthValue();
+
+  // Filter selection
+  const filterBrand = el("summaryFilter").value; 
+
+  // Variables for Summary
+  let sumBaseFee = 0, sumProjFee = 0;
+  let sumProjFeeOwned = 0, sumProjFeeMp = 0;
+  let sumSalesAll = 0, sumOwnedSales = 0, sumMpSales = 0;
+  let sumBaseOwnedSales = 0, sumBaseMpSales = 0;
+
+  // Variables for Input Totals (Always All)
+  let totInWeb=0, totInWebTrx=0, totInApp=0, totInAppTrx=0, totInMp=0, totInMpTrx=0;
+
+  const inputRows = Array.from(el("inputRows").children).slice(1); 
+
+  inputRows.forEach((tri) => {
+    const trr = tri.__resultRow;
+    const b = tri.__brandMeta;
+    
+    // Read values
+    const web = parseNumber(tri.querySelector('[data-k="web"]').value);
+    const web_trx = parseNumber(tri.querySelector('[data-k="web_trx"]').value);
+    const app = parseNumber(tri.querySelector('[data-k="app"]').value);
+    const app_trx = parseNumber(tri.querySelector('[data-k="app_trx"]').value);
+    const mp = parseNumber(tri.querySelector('[data-k="mp"]').value);
+    const mp_trx = parseNumber(tri.querySelector('[data-k="mp_trx"]').value);
+    const ownedSharePct = parseNumber(tri.querySelector('[data-k="ownedshare"]').value);
+
+    // Accumulate Inputs Total (Always for all brands)
+    totInWeb += web; totInWebTrx += web_trx;
+    totInApp += app; totInAppTrx += app_trx;
+    totInMp += mp;   totInMpTrx += mp_trx;
+
+    const r = calcBrand({
+      web, web_trx, app, app_trx, mp, mp_trx,
+      shopifyPct: b.shopifyPct, mpPct, mpPctProj, tapcartPct, midtransPerTrx, fsEligiblePct, fsAvgSubsidy, ownedSharePct,
+      growthPct // Pass growth
+    });
+
+    // Update Detailed Row
+    trr.querySelector('[data-k="pweb"]').textContent = fmtIDR(r.webP);
+    trr.querySelector('[data-k="papp"]').textContent = fmtIDR(r.appP);
+    trr.querySelector('[data-k="pmp"]').textContent  = fmtIDR(r.mpP);
+    
+    trr.querySelector('[data-k="ptweb"]').textContent = fmtNumber(r.webTrxP);
+    trr.querySelector('[data-k="ptapp"]').textContent = fmtNumber(r.appTrxP);
+    trr.querySelector('[data-k="ptmp"]').textContent  = fmtNumber(r.mpTrxP);
+    trr.querySelector('[data-k="base"]').textContent = fmtIDR(r.baseFee);
+    trr.querySelector('[data-k="proj"]').textContent = fmtIDR(r.projFee);
+    trr.querySelector('[data-k="delta"]').textContent = fmtIDR(r.delta);
+    
+    const dpEl = trr.querySelector('[data-k="deltapct"]');
+    dpEl.textContent = fmtDeltaPct(r.deltaPct);
+    dpEl.className = "px-4 py-3 text-right font-bold " + (r.delta <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400");
+
+    // Conditionally Add to Summary
+    if (filterBrand === 'ALL' || filterBrand === b.code) {
+      sumBaseFee += r.baseFee;
+      sumProjFee += r.projFee;
+      sumProjFeeOwned += r.projFeeOwned;
+      sumProjFeeMp += r.projFeeMp;
+      sumSalesAll += r.totalSales;
+      sumOwnedSales += (r.webP + r.appP);
+      sumMpSales += r.mpP;
+      
+      sumBaseOwnedSales += r.baseOwned;
+      sumBaseMpSales += r.baseMp;
+    }
+  });
+
+  // Update Input Totals Row
+  el("totWebSales").textContent = fmtNumber(totInWeb);
+  el("totWebTrx").textContent = fmtNumber(totInWebTrx);
+  el("totAppSales").textContent = fmtNumber(totInApp);
+  el("totAppTrx").textContent = fmtNumber(totInAppTrx);
+  el("totMpSales").textContent = fmtNumber(totInMp);
+  el("totMpTrx").textContent = fmtNumber(totInMpTrx);
+
+  // Update Summary Cards
+  const delta = sumProjFee - sumBaseFee;
+  const deltaPct = sumBaseFee ? (delta / sumBaseFee) * 100 : 0;
+
+  el("overallBase").textContent = fmtIDR(sumBaseFee);
+  el("overallProj").textContent = fmtIDR(sumProjFee);
+  el("overallDelta").textContent = fmtIDR(delta);
+  el("overallDeltaPct").textContent = `${fmtDeltaPct(deltaPct)} vs baseline fee`;
+  el("sumTotalSales").textContent = fmtIDR(sumSalesAll);
+
+  const ownedShare = sumSalesAll ? (sumOwnedSales / sumSalesAll) * 100 : 0;
+  el("sumOwnedShare").textContent = `${ownedShare.toFixed(1)}%`;
+  el("sumMpShare").textContent = `${(100-ownedShare).toFixed(1)}%`;
+  
+  el("sumProjOwnedSales").textContent = fmtIDR(sumOwnedSales);
+  el("sumProjMpSales").textContent = fmtIDR(sumMpSales);
+  
+  const ownedFeePct = sumOwnedSales ? (sumProjFeeOwned / sumOwnedSales) * 100 : 0;
+  el("sumProjOwnedFee").textContent = `${fmtCompact(sumProjFeeOwned)} (${ownedFeePct.toFixed(1)}%)`;
+
+  const mpFeePct = sumMpSales ? (sumProjFeeMp / sumMpSales) * 100 : 0;
+  el("sumProjMpFee").textContent = `${fmtCompact(sumProjFeeMp)} (${mpFeePct.toFixed(1)}%)`;
+
+  // --- Growth vs Baseline Logic ---
+  const ownedGrowth = sumBaseOwnedSales ? ((sumOwnedSales - sumBaseOwnedSales) / sumBaseOwnedSales * 100) : 0;
+  const mpGrowth = sumBaseMpSales ? ((sumMpSales - sumBaseMpSales) / sumBaseMpSales * 100) : 0;
+
+  // Render Growth Indicators
+  const renderGrowth = (elId, val) => {
+    const elem = el(elId);
+    const sign = val >= 0 ? "+" : "";
+    const colorClass = val >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400";
+    elem.className = `text-[10px] font-bold mt-0.5 ${colorClass}`;
+    elem.textContent = `${sign}${val.toFixed(1)}% vs Baseline`;
+  };
+  renderGrowth("sumProjOwnedGrowth", ownedGrowth);
+  renderGrowth("sumProjMpGrowth", mpGrowth);
+
+
+  // Dynamic Insight
+  const datasetLabel = el("dsDay1").checked ? "Ramadan Day 1" : "Ramadan Full Month";
+  const mpShare = 100 - ownedShare;
+  const absDelta = Math.abs(delta);
+  const absDeltaPct = Math.abs(deltaPct);
+  const scopeText = (filterBrand === 'ALL') ? "our" : `${filterBrand}'s`;
+
+  let insightHTML = "";
+  if (delta <= 0) {
+     insightHTML = `If we shift ${scopeText} sales contribution to <strong class="text-slate-900 dark:text-white">${mpShare.toFixed(1)}% Marketplace</strong> and <strong class="text-slate-900 dark:text-white">${ownedShare.toFixed(1)}% Website</strong> (with ${growthPct}% growth), we will save <strong class="text-emerald-600 dark:text-emerald-400">${absDeltaPct.toFixed(1)}%</strong> of fees (equal to <strong class="text-emerald-600 dark:text-emerald-400">${fmtCompact(absDelta)}</strong>) based on ${scopeText} <strong>${datasetLabel}</strong> baseline.`;
+  } else {
+     insightHTML = `If we shift ${scopeText} sales contribution to <strong class="text-slate-900 dark:text-white">${mpShare.toFixed(1)}% Marketplace</strong> and <strong class="text-slate-900 dark:text-white">${ownedShare.toFixed(1)}% Website</strong> (with ${growthPct}% growth), ${scopeText} fees will increase by <strong class="text-rose-600 dark:text-rose-400">${absDeltaPct.toFixed(1)}%</strong> (equal to <strong class="text-rose-600 dark:text-rose-400">${fmtCompact(absDelta)}</strong>) based on ${scopeText} <strong>${datasetLabel}</strong> baseline.`;
+  }
+  el("insightText").innerHTML = insightHTML;
+
+  // Chart Update
+  const varianceColor = delta <= 0 ? "#10b981" : "#ef4444"; 
+  barChart.data.datasets[0].data = [
+    [0, sumBaseFee],              
+    [sumProjFee, sumBaseFee],   
+    [0, sumProjFee]               
+  ];
+  barChart.data.datasets[0].backgroundColor = ["#94a3b8", varianceColor, "#3b82f6"];
+  barChart.update();
+}
+
+function applyGlobalShare(value) {
+  const v = String(parseNumber(value));
+  el("globalShareLabel").textContent = `${v}%`;
+  const rows = Array.from(el("inputRows").children).slice(1);
+  rows.forEach(tri => {
+    tri.querySelector('[data-k="ownedshare"]').value = v;
+    tri.querySelector('[data-k="ownedshareLabel"]').textContent = `${v}% Web`;
+  });
+  recalc();
+}
+
+/* -----------------------------
+   Export to Excel Logic
+----------------------------- */
+function exportToExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // 1. Prepare Inputs Data
+  const inputsData = [
+    ["Brand", "Shopify%", "Web Sales", "Web Trx", "App Sales", "App Trx", "MP Sales", "MP Trx", "Projected Website Share"]
+  ];
+  
+  const inputRows = Array.from(el("inputRows").children).slice(1); // skip total
+  const growthPct = getGrowthValue();
+
+  inputRows.forEach(tri => {
+     const b = tri.__brandMeta;
+     const web = parseNumber(tri.querySelector('[data-k="web"]').value);
+     const web_trx = parseNumber(tri.querySelector('[data-k="web_trx"]').value);
+     const app = parseNumber(tri.querySelector('[data-k="app"]').value);
+     const app_trx = parseNumber(tri.querySelector('[data-k="app_trx"]').value);
+     const mp = parseNumber(tri.querySelector('[data-k="mp"]').value);
+     const mp_trx = parseNumber(tri.querySelector('[data-k="mp_trx"]').value);
+     const share = parseNumber(tri.querySelector('[data-k="ownedshare"]').value);
+     
+     inputsData.push([b.name, b.shopifyPct/100, web, web_trx, app, app_trx, mp, mp_trx, share/100]);
+  });
+  // Append Global Growth to Inputs Sheet
+  inputsData.push(["", "", "", "", "", "", "", "Global Sales Growth %:", growthPct/100]);
+
+  const wsInputs = XLSX.utils.aoa_to_sheet(inputsData);
+  XLSX.utils.book_append_sheet(wb, wsInputs, "Inputs");
+
+  // 2. Prepare Projections Data
+  const projData = [
+    ["Brand", "Proj. Web Sales", "Proj. App Sales", "Proj. MP Sales", "Proj. Web Trx", "Proj. App Trx", "Proj. MP Trx", "Baseline Fee", "Projected Fee", "Delta Fee", "Delta %"]
+  ];
+  
+  const mpPct = parseNumber(el("mpFeePct").value);
+  const mpPctProj = parseNumber(el("mpFeePctProj").value);
+  const tapcartPct = parseNumber(el("tapcartPct").value);
+  const midtransPerTrx = parseNumber(el("midtransPerTrx").value);
+  const fsEligiblePct = parseNumber(el("fsEligiblePct").value);
+  const fsAvgSubsidy = parseNumber(el("fsAvgSubsidy").value);
+
+  inputRows.forEach(tri => {
+    const b = tri.__brandMeta;
+    const web = parseNumber(tri.querySelector('[data-k="web"]').value);
+    const web_trx = parseNumber(tri.querySelector('[data-k="web_trx"]').value);
+    const app = parseNumber(tri.querySelector('[data-k="app"]').value);
+    const app_trx = parseNumber(tri.querySelector('[data-k="app_trx"]').value);
+    const mp = parseNumber(tri.querySelector('[data-k="mp"]').value);
+    const mp_trx = parseNumber(tri.querySelector('[data-k="mp_trx"]').value);
+    const ownedSharePct = parseNumber(tri.querySelector('[data-k="ownedshare"]').value);
+
+    const r = calcBrand({
+      web, web_trx, app, app_trx, mp, mp_trx,
+      shopifyPct: b.shopifyPct, mpPct, mpPctProj, tapcartPct, midtransPerTrx, fsEligiblePct, fsAvgSubsidy, ownedSharePct,
+      growthPct
+    });
+
+    projData.push([
+      b.name, 
+      r.webP, r.appP, r.mpP, 
+      r.webTrxP, r.appTrxP, r.mpTrxP, 
+      r.baseFee, r.projFee, r.delta, r.deltaPct/100
+    ]);
+  });
+  
+  const wsProj = XLSX.utils.aoa_to_sheet(projData);
+  XLSX.utils.book_append_sheet(wb, wsProj, "Projections");
+
+  // Unique Filename with Timestamp
+  const now = new Date();
+  // Format: YYYY-MM-DD_HH-mm-ss
+  const pad = (n) => String(n).padStart(2, '0');
+  const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+  
+  XLSX.writeFile(wb, `Modinity_Fee_Simulation_${timestamp}.xlsx`);
+}
+el("exportBtn").addEventListener("click", exportToExcel);
+
+
+/* -----------------------------
+   Init
+----------------------------- */
+function setTheme(mode) {
+  const root = document.documentElement;
+  if (mode === "dark") root.classList.add("dark");
+  else root.classList.remove("dark");
+  applyChartTheme();
+  localStorage.setItem("theme", mode);
+  el("themeLabel").textContent = (mode === "dark") ? "Light" : "Dark";
+}
+function initTheme() {
+  const saved = localStorage.getItem("theme");
+  setTheme(saved === "dark" ? "dark" : "light");
+}
+el("themeBtn").addEventListener("click", () => {
+  const isDark = document.documentElement.classList.contains("dark");
+  setTheme(isDark ? "light" : "dark");
+});
+
+function setGlobalToWeightedBaseline() {
+  let tot = 0, owned = 0;
+  const rows = Array.from(el("inputRows").children).slice(1);
+  rows.forEach(tri => {
+    const w = parseNumber(tri.querySelector('[data-k="web"]').value);
+    const a = parseNumber(tri.querySelector('[data-k="app"]').value);
+    const m = parseNumber(tri.querySelector('[data-k="mp"]').value);
+    tot += (w+a+m);
+    owned += (w+a);
+  });
+  const weighted = tot ? Math.round((owned/tot)*100) : 0;
+  el("globalOwnedShare").value = String(weighted);
+  el("globalShareLabel").textContent = `${weighted}%`;
+}
+
+function resetDefaults() {
+  el("mpFeePct").value = "14"; el("mpFeePctProj").value = "18"; el("tapcartPct").value = "0.07"; el("midtransPerTrx").value = "7,500"; el("fsEligiblePct").value = "67"; el("fsAvgSubsidy").value = "40,000"; 
+  // Reset Growth
+  el("growthSlider").value = "0"; 
+  el("growthInput").value = "0";
+  el("growthCustomToggle").checked = false;
+  el("growthSliderContainer").classList.remove("hidden");
+  el("growthInputContainer").classList.add("hidden");
+  updateGrowthDisplay();
+
+  buildTables(); setGlobalToWeightedBaseline(); recalc();
+}
+el("resetBtn").addEventListener("click", resetDefaults);
+
+function switchDataset(which) {
+  ACTIVE_DATASET = (which === "month") ? DATASET_MONTH : DATASET_DAY1;
+  buildTables(); setGlobalToWeightedBaseline(); recalc();
+}
+el("dsDay1").addEventListener("change", () => { if (el("dsDay1").checked) switchDataset("day1"); });
+el("dsMonth").addEventListener("change", () => { if (el("dsMonth").checked) switchDataset("month"); });
+
+initTheme();
+buildTables();
+setGlobalToWeightedBaseline();
+updateGrowthDisplay();
+// recalc is called by updateGrowthDisplay
+
+el("globalOwnedShare").addEventListener("input", (e) => applyGlobalShare(e.target.value));
+["mpFeePct","mpFeePctProj","tapcartPct","midtransPerTrx","fsEligiblePct","fsAvgSubsidy"].forEach(id => {
+  el(id).addEventListener("input", recalc);
+  // Apply formatting logic
+  attachNumberFormatting(el(id));
+});
+// Attach formatting to growth input too just in case
+attachNumberFormatting(el("growthInput"));
+
+</script>
+</body>
+</html>
