@@ -1,1108 +1,704 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Modinity — Website vs Marketplace Fee Simulator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modinity Group · Ramadan Sales Analysis 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --ink:#1a1a2e;--ink2:#2d3748;--ink3:#4a5568;--muted:#718096;--light:#a0aec0;
+  --border:#e2e8f0;--bg:#fff;--bg2:#f7f9fc;
+  --gold:#b8860b;--gold-pale:#fef9ee;
+  --teal:#0d7377;--teal-pale:#ecfafa;
+  --rose:#c0392b;--rose-pale:#fff5f5;
+  --amber:#d97706;--green:#047857;--green-pale:#f0fdf4;
+  --c-mkt:#2563eb;--c-own:#7c3aed;--c-fra:#059669;--c-web:#db2477;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f1f5f9;color:var(--ink);font-family:'DM Sans',sans-serif;line-height:1.5;font-size:14px;}
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { darkMode: 'class' }</script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-  
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+/* NAV */
+.tab-nav-wrap{background:var(--ink);position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.tab-nav{max-width:1200px;margin:0 auto;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 24px;}
+.tab-nav::-webkit-scrollbar{display:none;}
+.tab-btn{flex-shrink:0;padding:14px 18px;font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.tab-btn:hover{color:rgba(255,255,255,.75);}
+.tab-btn.active{color:#fff;border-bottom-color:var(--gold);}
+.tab-btn.gtab.active{color:#ffd732;border-bottom-color:#ffd732;}
 
-  <style>
-    input[type="range"] { accent-color: #4f46e5; }
-    .dark input[type="range"] { accent-color: #a78bfa; }
-    .rtl-range { direction: rtl; } /* left=100 right=0 */
-    /* Excel-like table styles */
-    .excel-table th, .excel-table td {
-      border: 1px solid #e2e8f0; /* slate-200 */
-    }
-    .dark .excel-table th, .dark .excel-table td {
-      border-color: #1e293b; /* slate-800 */
-    }
-  </style>
+.page{max-width:1200px;margin:0 auto;padding:32px 24px 64px;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* BRAND HEADER */
+.bh{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px;padding-bottom:22px;border-bottom:2px solid var(--ink);}
+.bh-tag{font-size:9.5px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.bh-tag::before{content:'';display:block;width:18px;height:1px;background:var(--gold);}
+.bh-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,44px);font-weight:300;line-height:1.05;letter-spacing:-.5px;}
+.bh-title em{font-style:italic;font-weight:600;color:var(--gold);}
+.bh-meta{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.8;}
+.bh-meta strong{color:var(--ink2);font-weight:500;}
+.bh-badge{display:inline-block;background:var(--ink);color:#fff;font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:2px;}
+.bh-pill{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.5px;padding:3px 9px;border-radius:20px;background:#fff3cd;color:#856404;border:1px solid #ffc107;margin-top:5px;}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+.kpi-card{background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:22px 24px;}
+.kpi-card.teal{background:var(--teal-pale);border-color:rgba(13,115,119,.2);}
+.kpi-card.amber{background:#fffbeb;border-color:rgba(217,119,6,.2);}
+.kpi-lbl{font-size:9.5px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--light);margin-bottom:10px;}
+.kpi-main{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,3.5vw,40px);font-weight:600;line-height:1;color:var(--teal);margin-bottom:8px;}
+.kpi-card.amber .kpi-main{color:var(--amber);}
+.kpi-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:10px;}
+.kpi-badge.pos{background:var(--green-pale);color:var(--green);}
+.kpi-badge.neg{background:var(--rose-pale);color:var(--rose);}
+.kpi-badge.na{background:var(--bg2);color:var(--muted);}
+.kpi-ref{font-size:11.5px;color:var(--muted);line-height:1.75;border-top:1px solid var(--border);padding-top:9px;margin-top:2px;}
+.kpi-ref strong{color:var(--ink2);font-weight:500;}
+
+/* EXECUTIVE SUMMARY */
+.exec-summary{background:#fff;border:1.5px solid var(--border);border-left:4px solid var(--ink);border-radius:0 12px 12px 0;padding:22px 26px;margin-bottom:24px;}
+.es-label{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.es-label::before{content:'';display:block;width:14px;height:1px;background:var(--gold);}
+.es-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:12px;}
+.es-body{font-size:13px;line-height:1.85;color:var(--ink3);}
+.es-body p{margin-bottom:10px;}
+.es-body p:last-child{margin-bottom:0;}
+.es-body strong{color:var(--ink);font-weight:600;}
+
+/* SECTIONS */
+.sh{display:flex;align-items:baseline;gap:12px;margin-bottom:4px;}
+.sn{font-family:'Cormorant Garamond',serif;font-size:12px;font-style:italic;color:var(--light);}
+.st{font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:400;color:var(--ink);}
+.sd{font-size:12px;color:var(--muted);margin-bottom:16px;max-width:780px;line-height:1.7;}
+
+/* CARD */
+.card{background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:22px;margin-bottom:14px;}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.card-sub{font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.6;}
+.chart-wrap.h260{height:260px;}
+.chart-wrap.h300{height:300px;}
+.chart-wrap.h130{height:130px;}
+
+/* TOGGLE */
+.tgl-row{display:flex;gap:0;border:1.5px solid var(--border);border-radius:6px;overflow:hidden;}
+.tgl{padding:5px 12px;font-size:10px;font-weight:600;letter-spacing:.5px;cursor:pointer;border:none;background:var(--bg);color:var(--muted);transition:all .15s;border-right:1px solid var(--border);}
+.tgl:last-child{border-right:none;}
+.tgl.active{background:var(--ink);color:#fff;}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500;}
+.ll{width:18px;height:2.5px;border-radius:2px;}
+
+/* ANNOTATIONS */
+.anns{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;}
+.ann{display:inline-flex;align-items:center;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500;}
+.ann-mrf{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+.ann-smb{background:#eff6ff;color:#1e40af;border:1px solid #93c5fd;}
+.ann-gema{background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;}
+.ann-info{background:var(--bg2);color:var(--muted);border:1px solid var(--border);}
+
+/* PHASES */
+.phases{display:grid;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:16px;}
+.phase-row{display:grid;grid-template-columns:140px 80px 1fr 100px 100px;gap:0;border-bottom:1px solid var(--border);font-size:11.5px;}
+.phase-row:last-child{border-bottom:none;}
+.phase-row.hdr{background:var(--ink);color:#fff;font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.phase-row.hdr .pc{color:rgba(255,255,255,.7);}
+.pc{padding:9px 12px;display:flex;align-items:center;border-right:1px solid var(--border);}
+.phase-row.hdr .pc{border-right:1px solid rgba(255,255,255,.15);}
+.pc:last-child{border-right:none;}
+.phase-row.mrf-row .pc:first-child{border-left:3px solid #f59e0b;}
+.phase-row.smb-row .pc:first-child{border-left:3px solid #3b82f6;}
+.phase-row.gema-row .pc:first-child{border-left:3px solid #10b981;}
+.phase-row.trough-row .pc:first-child{border-left:3px solid #94a3b8;}
+.phase-row.post-row .pc:first-child{border-left:3px solid #e2e8f0;}
+.pc.pos{color:var(--green);font-weight:600;}
+.pc.neg{color:var(--rose);font-weight:600;}
+.pc.wow{color:var(--amber);font-weight:700;}
+.pc.na{color:var(--muted);}
+.ph-name{font-weight:600;font-size:11.5px;color:var(--ink);}
+.ph-dates{font-size:10px;color:var(--muted);}
+
+/* TIMELINE */
+.tl-wrap{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:22px;}
+.tl-row{display:flex;align-items:stretch;margin-bottom:4px;}
+.tl-lbl{width:46px;flex-shrink:0;font-size:9px;font-weight:600;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;}
+.tl-cells{flex:1;display:flex;}
+.tl-cell{flex:1;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;border-right:1px solid rgba(255,255,255,.4);}
+.tl-cell:last-child{border-right:none;}
+.tl-leg{display:flex;gap:14px;flex-wrap:wrap;padding-left:46px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.tl-li{display:flex;align-items:center;gap:5px;}
+.tl-dot{width:11px;height:9px;border-radius:2px;flex-shrink:0;}
+
+/* CHANNEL CARDS */
+.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.ch-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:16px 16px 12px;border-top:3px solid var(--border);}
+.ch-card.mkt{border-top-color:var(--c-mkt);}
+.ch-card.own{border-top-color:var(--c-own);}
+.ch-card.fra{border-top-color:var(--c-fra);}
+.ch-card.web{border-top-color:var(--c-web);}
+.ch-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;}
+.ch-type{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--light);margin-bottom:7px;}
+.ch-stats{display:flex;gap:14px;margin-bottom:10px;}
+.cs-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--light);margin-bottom:2px;}
+.cs-val{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;line-height:1;}
+.ch-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;}
+.ch-badge.neg{background:var(--rose-pale);color:var(--rose);}
+.ch-badge.pos{background:var(--green-pale);color:var(--green);}
+.ch-badge.wow{background:#fff7ed;color:var(--amber);}
+.ch-badge.na{background:var(--bg2);color:var(--muted);}
+
+/* BRAND MIX */
+.bmix-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;}
+.bmix-card{flex-shrink:0;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;min-width:115px;border-top:3px solid;}
+.bmix-name{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.bmix-share{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--ink);line-height:1;margin-bottom:2px;}
+.bmix-idr{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.bmix-g{font-size:12px;font-weight:700;}
+
+/* PROJECTION */
+.proj-hero{background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:24px;margin-bottom:14px;}
+.proj-headline{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--light);margin-bottom:8px;}
+.proj-amount{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,48px);font-weight:600;line-height:1;color:var(--ink);margin-bottom:8px;}
+.proj-gbadge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;font-size:14px;font-weight:700;margin-bottom:12px;}
+.proj-gbadge.pos{background:var(--green-pale);color:var(--green);border:1.5px solid #86efac;}
+.proj-gbadge.neg{background:var(--rose-pale);color:var(--rose);border:1.5px solid #feb2b2;}
+.proj-gbadge.na{background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);}
+.proj-sub{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:20px;}
+.proj-sub strong{color:var(--ink2);font-weight:500;}
+.proj-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pmc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.pmc-l{font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--light);margin-bottom:4px;}
+.pmc-v{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);line-height:1;margin-bottom:3px;}
+.pmc-s{font-size:11px;color:var(--muted);}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin-bottom:14px;}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+.tbl th{background:var(--ink);color:#fff;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 12px;text-align:right;white-space:nowrap;}
+.tbl th:first-child,.tbl th:nth-child(2),.tbl th:nth-child(3){text-align:left;}
+.tbl td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;color:var(--ink2);font-size:12px;white-space:nowrap;}
+.tbl td:first-child{text-align:left;font-weight:700;font-size:12px;}
+.tbl td:nth-child(2),.tbl td:nth-child(3){text-align:left;font-size:11px;color:var(--muted);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:nth-child(even) td{background:var(--bg2);}
+.td-pos{color:var(--green)!important;font-weight:700!important;}
+.td-neg{color:var(--rose)!important;font-weight:700!important;}
+.td-wow{color:var(--amber)!important;font-weight:700!important;}
+.ev-mrf{background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;}
+.ev-smb{background:#dbeafe;color:#1e40af;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;}
+.ev-gema{background:#d1fae5;color:#065f46;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;}
+.tbl-note{font-size:11px;color:var(--muted);margin-top:6px;}
+
+.pg-footer{padding-top:22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:36px;}
+.pf-brand{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;font-style:italic;color:var(--ink);}
+.pf-notes{font-size:10px;color:var(--light);text-align:right;line-height:1.8;}
+@media(max-width:700px){.kpi-row,.ch-grid,.proj-meta{grid-template-columns:1fr;} .bmix-row{flex-wrap:nowrap;}}
+</style>
 </head>
-
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-  <div class="max-w-none mx-auto px-4 md:px-8 py-6">
-
-    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
-      <div class="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-        <img src="https://modinity.com/cdn/shop/files/Modinity_logo_black-01_170x.png" 
-             alt="Modinity Logo" 
-             class="h-10 w-auto object-contain dark:invert" />
-        
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Fee Simulator <span class="text-slate-400 font-normal">| Website vs Marketplace</span>
-          </h1>
-          <div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-             <p class="text-sm text-slate-500 dark:text-slate-400">
-               Adjust <span class="font-medium text-slate-700 dark:text-slate-200">Website share</span> & <span class="font-medium text-slate-700 dark:text-slate-200">Growth</span> to forecast savings.
-             </p>
-             <span class="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
-             <p class="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2 py-0.5 rounded-md inline-block">
-               Developed by Modinity Data & Business Intelligence Team
-             </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <button id="exportBtn"
-          class="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 transition-colors">
-          <svg xmlns="https://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-spreadsheet"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
-          Export Excel
-        </button>
-
-        <button id="themeBtn"
-          class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:bg-slate-50
-                 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
-          <span id="themeLabel">Dark</span> mode
-        </button>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm
-                  dark:border-slate-800 dark:bg-slate-900 flex flex-col h-full">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <h2 class="font-semibold text-base">Assumptions</h2>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">
-              MP is blended. TapCart (App only). Midtrans/FreeShipping (Website+App).
-            </p>
-          </div>
-          <button id="resetBtn"
-            class="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium shadow-sm hover:bg-slate-50
-                   dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-            Reset
-          </button>
-        </div>
-
-        <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3
-                    dark:border-slate-800 dark:bg-slate-950">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Baseline Dataset</div>
-          <div class="flex items-center gap-2">
-            <label class="flex-1 cursor-pointer">
-              <input type="radio" name="dataset" id="dsDay1" class="peer hidden" />
-              <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center shadow-sm transition-all
-                          peer-checked:border-indigo-500 peer-checked:ring-1 peer-checked:ring-indigo-500 peer-checked:text-indigo-600
-                          dark:border-slate-800 dark:bg-slate-900 dark:peer-checked:ring-indigo-400 dark:peer-checked:text-indigo-400">
-                <div class="text-sm font-semibold">Ramadan Day 1</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">1 Mar 2025</div>
-              </div>
-            </label>
-            <label class="flex-1 cursor-pointer">
-              <input type="radio" name="dataset" id="dsMonth" class="peer hidden" checked />
-              <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center shadow-sm transition-all
-                          peer-checked:border-indigo-500 peer-checked:ring-1 peer-checked:ring-indigo-500 peer-checked:text-indigo-600
-                          dark:border-slate-800 dark:bg-slate-900 dark:peer-checked:ring-indigo-400 dark:peer-checked:text-indigo-400">
-                <div class="text-sm font-semibold">Full Month</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">1–31 Mar 2025</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <div class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 dark:bg-indigo-950/30 dark:border-indigo-900/50">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-bold text-indigo-900 dark:text-indigo-200">Global Website Share</div>
-            <div class="text-sm font-bold text-indigo-600 dark:text-indigo-400" id="globalShareLabel">—</div>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-medium text-indigo-700 dark:text-indigo-300">100% Website</span>
-            <input id="globalOwnedShare" type="range" min="0" max="100" value="0" class="flex-1 h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer dark:bg-indigo-800 rtl-range" />
-            <span class="text-[10px] font-medium text-indigo-700 dark:text-indigo-300">0%</span>
-          </div>
-          <p class="text-[10px] text-indigo-500/80 mt-1 text-center font-medium">Slide left to increase Website share</p>
-        </div>
-
-        <div class="mt-4 space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-medium text-slate-600 dark:text-slate-400">Projected Sales Growth (%)</label>
-              <div class="flex items-center gap-2">
-                <label for="growthCustomToggle" class="text-[10px] text-slate-500 cursor-pointer select-none">Custom (>100%)</label>
-                <input type="checkbox" id="growthCustomToggle" class="accent-indigo-600 h-3 w-3 cursor-pointer" />
-              </div>
-            </div>
-
-            <div id="growthSliderContainer" class="block">
-              <div class="flex items-center gap-3">
-                <span class="text-[10px] text-slate-400 w-8 text-right">-100%</span>
-                <input id="growthSlider" type="range" min="-100" max="100" value="0" 
-                       class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-800 accent-indigo-500" />
-                <span class="text-[10px] text-slate-400 w-8">100%</span>
-                <div class="w-12 text-right text-xs font-bold text-indigo-600 dark:text-indigo-400" id="growthSliderVal">0%</div>
-              </div>
-            </div>
-
-            <div id="growthInputContainer" class="hidden">
-              <input id="growthInput" type="number" value="0" placeholder="Enter growth %"
-                     class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
-                            focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 pt-2">
-             <div>
-                <label class="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">MP Fee 2025 (%)</label>
-                <input id="mpFeePct" value="14" inputmode="decimal"
-                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
-                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" 
-                  title="Used for Baseline Calculation"/>
-             </div>
-             <div>
-                <label class="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">MP Fee 2026 (%)</label>
-                <input id="mpFeePctProj" value="18" inputmode="decimal"
-                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
-                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" 
-                  title="Used for Projected Calculation"/>
-             </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <label class="text-xs font-medium text-slate-600 dark:text-slate-400 w-1/2">TapCart Fee (%)</label>
-            <input id="tapcartPct" value="0.07" inputmode="decimal"
-              class="w-1/2 rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
-                     focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-          </div>
-
-          <div class="flex items-center gap-3">
-            <label class="text-xs font-medium text-slate-600 dark:text-slate-400 w-1/2">Midtrans (IDR/trx)</label>
-            <input id="midtransPerTrx" value="7,500" inputmode="numeric"
-              class="w-1/2 rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
-                     focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-          </div>
-
-          <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-xs font-medium text-slate-600 dark:text-slate-400">Free Shipping (Website)</label>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-               <div>
-                  <div class="text-[10px] text-slate-400 mb-1">Eligible %</div>
-                  <input id="fsEligiblePct" value="67" inputmode="decimal"
-                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
-                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-               </div>
-               <div>
-                  <div class="text-[10px] text-slate-400 mb-1">Avg Subsidy (Rp)</div>
-                  <input id="fsAvgSubsidy" value="40,000" inputmode="numeric"
-                  class="w-full rounded-lg border border-slate-200 bg-white py-1.5 px-2 text-right text-sm shadow-sm
-                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm
-                  dark:border-slate-800 dark:bg-slate-900 lg:col-span-2 flex flex-col">
-        
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white">Executive Summary</h2>
-          <select id="summaryFilter" 
-                  class="text-sm border border-slate-200 rounded-lg px-2 py-1 bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-slate-900 dark:border-slate-800">
-            <option value="ALL">Total (All Brands)</option>
-            </select>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-2">
-          
-          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-2">
-            <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Projected Sales</div>
-            <div id="sumTotalSales" class="text-lg font-bold mt-1 tracking-tight text-slate-900 dark:text-white">—</div>
-            <div class="text-[10px] text-slate-500 mt-1">
-              Website: <span id="sumOwnedShare" class="font-semibold text-slate-700 dark:text-slate-300">—</span> • 
-              MP: <span id="sumMpShare" class="font-semibold text-slate-700 dark:text-slate-300">—</span>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
-            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Projected Website Sales</div>
-            <div id="sumProjOwnedSales" class="text-sm font-semibold mt-1 text-slate-900 dark:text-white truncate">—</div>
-            <div id="sumProjOwnedGrowth" class="text-[10px] font-medium mt-0.5">—</div>
-            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-               <div class="text-[9px] text-slate-400">Fee</div>
-               <div id="sumProjOwnedFee" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">—</div>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
-            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Projected MP Sales</div>
-            <div id="sumProjMpSales" class="text-sm font-semibold mt-1 text-slate-900 dark:text-white truncate">—</div>
-            <div id="sumProjMpGrowth" class="text-[10px] font-medium mt-0.5">—</div>
-            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-               <div class="text-[9px] text-slate-400">Fee</div>
-               <div id="sumProjMpFee" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">—</div>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
-            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Baseline Fee</div>
-            <div id="overallBase" class="text-sm font-semibold mt-1 truncate">—</div>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 md:col-span-1">
-            <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">Projected Fee</div>
-            <div id="overallProj" class="text-sm font-semibold mt-1 truncate">—</div>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-slate-900 p-4 text-white dark:border-slate-800 dark:bg-indigo-600 md:col-span-2 flex flex-col justify-center">
-            <div class="text-xs font-medium text-white/70 uppercase tracking-wide">Net Delta</div>
-            <div id="overallDelta" class="text-2xl font-bold mt-1 tracking-tight">—</div>
-            <div id="overallDeltaPct" class="text-sm font-medium mt-1 opacity-90">—</div>
-          </div>
-          
-          <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-4 dark:border-slate-800 dark:bg-slate-800/50 md:col-span-4 flex flex-col justify-center">
-            <div class="flex items-center gap-2 mb-2">
-              <div class="h-2 w-2 rounded-full bg-indigo-500"></div>
-              <div class="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-400">
-                Dynamic Insight
-              </div>
-            </div>
-            <div id="insightText" class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              Loading...
-            </div>
-          </div>
-
-        </div>
-
-        <div class="mt-6 flex-1 w-full min-h-[200px]">
-          <canvas id="barChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm
-                dark:border-slate-800 dark:bg-slate-900 mb-8 overflow-hidden">
-      <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-        <h2 class="text-base font-bold">A) Inputs & Configuration</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Baseline sales + transactions by channel. Use the sliders to adjust projected Website share per brand.
-        </p>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="excel-table w-full text-xs md:text-sm table-fixed min-w-[1000px] border-collapse">
-          <thead class="bg-white text-slate-500 dark:bg-slate-950 dark:text-slate-400">
-            <tr>
-              <th class="text-left px-4 py-3 w-[140px] font-semibold bg-slate-50 dark:bg-slate-900">Brand</th>
-              <th class="text-right px-2 py-3 w-[80px] font-medium bg-slate-50 dark:bg-slate-900">Shopify%</th>
-              <th class="text-right px-2 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">Web Sales</th>
-              <th class="text-right px-2 py-3 w-[90px] font-medium bg-slate-50 dark:bg-slate-900">Web Trx</th>
-              <th class="text-right px-2 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">App Sales</th>
-              <th class="text-right px-2 py-3 w-[90px] font-medium bg-slate-50 dark:bg-slate-900">App Trx</th>
-              <th class="text-right px-2 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">MP Sales</th>
-              <th class="text-right px-2 py-3 w-[90px] font-medium bg-slate-50 dark:bg-slate-900">MP Trx</th>
-              <th class="text-left px-4 py-3 w-[300px] font-semibold bg-slate-50 dark:bg-slate-900">Projected Website Share</th>
-            </tr>
-          </thead>
-          <tbody id="inputRows" class="bg-white dark:bg-slate-950">
-             </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm
-                dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-      <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-        <h2 class="text-base font-bold">B) Detailed Projections</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Projected channel split and fee breakdown based on your inputs.
-        </p>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="excel-table w-full text-xs md:text-sm table-fixed min-w-[1000px] border-collapse">
-          <thead class="bg-white text-slate-500 dark:bg-slate-950 dark:text-slate-400">
-            <tr>
-              <th class="text-left px-4 py-3 w-[140px] font-semibold bg-slate-50 dark:bg-slate-900">Brand</th>
-              <th class="text-right px-4 py-3 w-[260px] font-medium bg-slate-50 dark:bg-slate-900">Projected Sales Breakdown</th>
-              <th class="text-right px-4 py-3 w-[240px] font-medium bg-slate-50 dark:bg-slate-900">Projected Trx Breakdown</th>
-              <th class="text-right px-4 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">Baseline Fee</th>
-              <th class="text-right px-4 py-3 w-[140px] font-medium bg-slate-50 dark:bg-slate-900">Projected Fee</th>
-              <th class="text-right px-4 py-3 w-[130px] font-medium bg-slate-50 dark:bg-slate-900">Δ Fee</th>
-              <th class="text-right px-4 py-3 w-[100px] font-medium bg-slate-50 dark:bg-slate-900">Δ %</th>
-            </tr>
-          </thead>
-          <tbody id="resultRows" class="bg-white dark:bg-slate-950"></tbody>
-        </table>
-      </div>
-      <div class="p-4 bg-slate-50 dark:bg-slate-950/30 text-[10px] text-slate-400">
-        * Projections assume constant total sales per brand. Transaction counts are estimated using baseline AOV per channel.
-      </div>
-    </div>
+<body>
+<div class="tab-nav-wrap">
+  <div class="tab-nav">
+    <button class="tab-btn gtab active" onclick="switchTab('__group__',this)">Modinity Group</button>
+    <button class="tab-btn" onclick="switchTab('Buttonscarves',this)">Buttonscarves</button>
+    <button class="tab-btn" onclick="switchTab('Benang Jarum',this)">Benang Jarum</button>
+    <button class="tab-btn" onclick="switchTab('Buttonscarves Beauty',this)">BS Beauty</button>
+    <button class="tab-btn" onclick="switchTab('ZytaDelia',this)">ZytaDelia</button>
+    <button class="tab-btn" onclick="switchTab('Nada Puspita',this)">Nada Puspita</button>
+    <button class="tab-btn" onclick="switchTab('Calla The Label',this)">Calla The Label</button>
+    <button class="tab-btn" onclick="switchTab('TYGA',this)">TYGA</button>
   </div>
+</div>
+<div class="page"><div id="tab-contents"></div></div>
 
 <script>
-// Register the DataLabels plugin
-Chart.register(ChartDataLabels);
+const ALL = {"brands":["Benang Jarum","Buttonscarves","Buttonscarves Beauty","Calla The Label","Nada Puspita","TYGA","ZytaDelia"],"channels":["Marketplace","Own Store","Franchise","Website","Event","Dept Store","Affiliate","One Time Customer"],"data":{"Benang Jarum":{"2025":{"total":[730380705.0,814358920.0,1013057930.0,660965626.0,548034991.0,623161241.0,691802732.0,955063268.0,1017368337.0,510192464.0,657774139.0,689857429.0,857395022.0,1241021525.0,1566124417.0,1481751988.0,798529239.0,904427270.0,873363632.0,753071654.0,949224142.0,1305364936.0,1290617284.0,869634478.0,2418874978.0,928983626.0,841217441.0,813412149.0,898401898.0,675266142.0,311235654.0],"event":[0,0,0,0,0,0,0,0,0,403604.0,734234.0,4834459.0,146214414.0,75895495.0,97681532.0,61970270.0,0,0,0,0,0,0,0,0,0,0,85225225.0,0,0,0,0],"channels":{"Marketplace":[247736290.0,186791240.0,529067772.0,324048937.0,198317896.0,323607344.0,226486133.0,211863854.0,205771715.0,180822486.0,164276346.0,212496753.0,201382252.0,340758372.0,228699264.0,188094600.0,215999869.0,170159658.0,247280704.0,195609086.0,203188061.0,170625071.0,195039131.0,152553081.0,168050585.0,143637815.0,97442577.0,53501203.0,23112844.0,34650556.0,149028717.0],"Own Store":[215861036.0,329440315.0,180851351.0,173377252.0,204501351.0,155713739.0,273297748.0,440970270.0,471301126.0,170788063.0,229213514.0,230402252.0,249097973.0,392636036.0,647690991.0,681991892.0,320325225.0,399523874.0,331515315.0,270679279.0,413006306.0,620073874.0,594625225.0,432436486.0,508605856.0,460886036.0,413223423.0,454715766.0,530880180.0,421072973.0,54781081.0],"Franchise":[110533874.0,142706644.0,71282950.0,73896554.0,70505293.0,83123806.0,100968221.0,170751036.0,186567432.0,91501554.0,84903333.0,106812523.0,120545158.0,134775721.0,356964207.0,270772027.0,138183874.0,180756667.0,153279054.0,120499775.0,176171036.0,303395586.0,306128288.0,151005946.0,177900901.0,188289505.0,167626802.0,187964775.0,230907342.0,140846577.0,22275495.0],"Website":[138817342.0,120536712.0,218716667.0,70703378.0,50233333.0,45812387.0,62663063.0,74992117.0,83149099.0,45819369.0,154566892.0,106474099.0,107562613.0,264503153.0,153872523.0,195210360.0,98603153.0,126220270.0,107977928.0,125904955.0,119063514.0,109188288.0,98142342.0,99779279.0,99149099.0,83750450.0,27328829.0,37169820.0,27692793.0,23662162.0,4347297.0],"Event":[0,0,0,0,0,0,0,0,0,403604.0,734234.0,4834459.0,146214414.0,75895495.0,97681532.0,61970270.0,0,0,0,0,0,0,0,0,0,0,85225225.0,0,0,0,0],"Dept Store":[17432162.0,34884009.0,13139189.0,18939505.0,24477117.0,14903964.0,28387568.0,56485991.0,70578964.0,20857387.0,24079820.0,28837342.0,32592613.0,32452748.0,81215901.0,83712838.0,25417117.0,27766802.0,33310631.0,40378559.0,37795225.0,102082117.0,96682297.0,33859685.0,41848378.0,52419820.0,50370586.0,80060586.0,85808739.0,55033874.0,80803063.0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1423320159.0,0,0,0,0,0,0]}},"2026":{"total":[1587966671.0,805007113.0,1178874296.0,1074799151.0,496523808.0,428349409.0,755978914.0,899755003.0,1137612304.0,1263158923.0,1754332086.0,561303656.0,827461447.0,656931401.0,648534884.0,1689149291.0,1955084652.0],"event":[131574324.0,210371622.0,414126126.0,328710472.0,25531532.0,20657658.0,180918919.0,118689189.0,253504505.0,238180180.0,121357946.0,43139640.0,34828829.0,25495495.0,26274775.0,216936937.0,274869369.0],"channels":{"Marketplace":[63345558.0,29867454.0,22369146.0,24749352.0,87641943.0,25441751.0,127867404.0,62829408.0,61189692.0,45229734.0,37162548.0,41017710.0,128903165.0,36228788.0,49353313.0,64209273.0,78656411.0],"Own Store":[363725337.0,210772973.0,354180180.0,412626126.0,190446396.0,218576126.0,260570721.0,282479411.0,311876126.0,556539640.0,821056712.0,266464865.0,306369369.0,265796847.0,323362246.0,400046847.0,1064898245.0],"Franchise":[196382037.0,191386416.0,148809429.0,168026715.0,129963667.0,102656757.0,120694303.0,182785733.0,165288018.0,225588018.0,335679476.0,120213063.0,125992741.0,150151081.0,136554144.0,148617992.0,294495400.0],"Website":[819858559.0,151544144.0,218549550.0,106601351.0,51402703.0,52800000.0,51327027.0,235090541.0,324981532.0,115951802.0,404038829.0,70972973.0,204220721.0,158077928.0,84445946.0,833792793.0,216112162.0],"Event":[131574324.0,210371622.0,414126126.0,328710472.0,25531532.0,20657658.0,180918919.0,118689189.0,253504505.0,238180180.0,121357946.0,43139640.0,34828829.0,25495495.0,26274775.0,216936937.0,274869369.0],"Dept Store":[13080856.0,11064505.0,20839865.0,34085135.0,11537568.0,8217117.0,14600541.0,17880721.0,20772432.0,81669550.0,35036577.0,19495405.0,27146622.0,21181261.0,28544459.0,25545450.0,26053063.0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}},"Buttonscarves":{"2025":{"total":[7608945437.0,4289313229.0,4100364493.0,3149364422.0,4329655912.0,3867848555.0,4669184857.0,6256244926.0,4995952672.0,3799254344.0,3927877205.0,3496425425.0,5136442977.0,5187711029.0,5622237467.0,5167152090.0,3391932281.0,3344008350.0,3571129314.0,3357833172.0,3599379625.0,4332518310.0,3990455115.0,3190054667.0,4230558249.0,3720595568.0,4225150822.0,3314834520.0,2910432518.0,2406733078.0,1078457930.0],"event":[0,0,0,0,0,0,0,0,0,4505.0,13514.0,18018.0,1512916667.0,1384986486.0,1025943694.0,625045045.0,9009.0,18018.0,4505.0,4505.0,4505.0,18018.0,13514.0,296202703.0,346337838.0,0,769234234.0,0,0,0,0],"channels":{"Marketplace":[5124934111.0,2348790057.0,2784921428.0,1664145798.0,1451577920.0,1321644903.0,2026083141.0,1614477459.0,1283879875.0,1172125268.0,996199387.0,767884805.0,685792360.0,875852655.0,1100330454.0,983328644.0,918870077.0,568438795.0,642756249.0,602922832.0,643598256.0,483834937.0,417490090.0,457007172.0,755335471.0,498920976.0,314181685.0,156547750.0,131504541.0,118280568.0,421951623.0],"Own Store":[1117440565.0,782472039.0,497685889.0,566428729.0,1306076958.0,1213725225.0,1045606757.0,2529531691.0,1777978088.0,1311855384.0,1511213300.0,1350130192.0,907875676.0,1492867061.0,1887176919.0,1919267754.0,1089393148.0,1385541897.0,1443550827.0,1302775951.0,1473324460.0,2020484249.0,1857883784.0,1277865568.0,1695877477.0,1716576674.0,1452920184.0,1608936835.0,1515314264.0,1244899099.0,156027027.0],"Franchise":[843088250.0,654460483.0,469083330.0,491518487.0,1217541084.0,979154519.0,631412069.0,1637038457.0,1158588460.0,848666855.0,1014697779.0,987470514.0,632742284.0,895633095.0,1141224238.0,1061367345.0,756527118.0,891349718.0,907196578.0,792326866.0,981273028.0,1238113899.0,1291360520.0,855423594.0,983188917.0,1136824855.0,1105800079.0,1020290917.0,904046834.0,761004288.0,51486036.0],"Website":[490358322.0,337034750.0,336585557.0,393801273.0,323149861.0,329105665.0,570709058.0,417060517.0,718402782.0,439301341.0,372303271.0,346907842.0,330441892.0,425982580.0,369944595.0,485382041.0,576286486.0,448687444.0,374688753.0,592812162.0,450004332.0,443468468.0,282195495.0,240519820.0,362558005.0,263904054.0,500971622.0,304465549.0,240074628.0,203885294.0,8549550.0],"Event":[0,0,0,0,0,0,0,0,0,4505.0,13514.0,18018.0,1512916667.0,1384986486.0,1025943694.0,625045045.0,9009.0,18018.0,4505.0,4505.0,4505.0,18018.0,13514.0,296202703.0,346337838.0,0,769234234.0,0,0,0,0],"Dept Store":[33124189.0,30024099.0,12088288.0,33470135.0,31310090.0,24218243.0,45044234.0,58136802.0,57103468.0,27300991.0,33449955.0,44014054.0,39647072.0,44547477.0,97617568.0,92761261.0,50846441.0,49972477.0,49545135.0,66990856.0,51175045.0,146598739.0,141511712.0,63035811.0,87260541.0,104369009.0,82043018.0,104123874.0,119492252.0,78663829.0,440443694.0],"Affiliate":[0,136531801.0,0,0,0,0,350329598.0,0,0,0,0,0,0,67841675.0,0,0,0,0,153387267.0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,1027027027.0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,120469595.0,0,0,0]}},"2026":{"total":[1817340385.0,13773536119.0,14644645154.0,16285352955.0,2491196228.0,1509973318.0,3481687814.0,3422306567.0,3924560688.0,4478820269.0,2885205583.0,1977800365.0,3824824723.0,4923113615.0,5018473484.0,6518232928.0,8798600131.0],"event":[1007722072.0,12456579730.0,13134393243.0,14651340429.0,1271173423.0,-3349099.0,1513540541.0,1695695946.0,1462995495.0,1272064189.0,0,0,-135135.0,-900901.0,0,1361944144.0,1332892793.0],"channels":{"Marketplace":[205973586.0,323382386.0,230731080.0,222009332.0,358010130.0,357651313.0,466552109.0,393626918.0,503775439.0,345866436.0,427634871.0,413839086.0,1572978759.0,2943604644.0,2548845845.0,2680598281.0,3756469163.0],"Own Store":[229508258.0,427421797.0,623710569.0,638213982.0,343988072.0,465975511.0,643900540.0,565151282.0,918562485.0,1233921002.0,1279173936.0,703824107.0,876811359.0,844295290.0,1040093539.0,1166735837.0,1976862773.0],"Franchise":[214780961.0,330872324.0,488029001.0,523136681.0,298227817.0,390387443.0,431776411.0,429819547.0,645983186.0,849174385.0,852244563.0,524737128.0,749200128.0,739959660.0,913157793.0,953350661.0,1341670766.0],"Website":[146844831.0,167089342.0,138291441.0,215934650.0,204775660.0,277333962.0,282265151.0,306608506.0,368067011.0,378355316.0,271528384.0,297526845.0,589433981.0,367290508.0,469665766.0,271207546.0,342564095.0],"Event":[1007722072.0,12456579730.0,13134393243.0,14651340429.0,1271173423.0,-3349099.0,1513540541.0,1695695946.0,1462995495.0,1272064189.0,0,0,-135135.0,-900901.0,0,1361944144.0,1332892793.0],"Dept Store":[12510676.0,22080541.0,29489820.0,34717883.0,15021126.0,21974189.0,29023063.0,31404369.0,25177072.0,350844775.0,54623829.0,37873198.0,36535631.0,28864414.0,46710541.0,52500676.0,48140541.0],"Affiliate":[0,46110000.0,0,0,0,0,114630000.0,0,0,48594166.0,0,0,0,0,0,31895783.0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}},"Buttonscarves Beauty":{"2025":{"total":[154623760.0,156589786.0,232288664.0,130332588.0,143793325.0,96010717.0,122407226.0,147824314.0,158472187.0,106651700.0,113861095.0,109538930.0,275443722.0,815028452.0,654162152.0,529681912.0,147188893.0,401611860.0,578472675.0,457625856.0,422857595.0,409090591.0,366499758.0,280880495.0,312835403.0,313044343.0,386340264.0,297480865.0,292096681.0,269026318.0,103422078.0],"event":[0,0,0,0,0,0,0,0,0,4877252.0,3533784.0,3050676.0,161768694.0,157210586.0,91434459.0,89772297.0,2003378.0,6244369.0,912162.0,1531532.0,2252252.0,2887387.0,5139640.0,0,0,0,80873874.0,0,0,0,0],"channels":{"Marketplace":[79486890.0,54774274.0,166398354.0,82573032.0,73383820.0,44439058.0,65303944.0,39913731.0,44919543.0,51165949.0,49537424.0,32598368.0,46323091.0,457443632.0,212395130.0,112496954.0,73902931.0,217948307.0,397204786.0,276540186.0,228034781.0,138261002.0,116356222.0,102010732.0,109794930.0,106313112.0,94967363.0,87402036.0,56566696.0,53164234.0,9364869.0],"Own Store":[41086687.0,58715348.0,37794780.0,23959334.0,37223943.0,22550676.0,26977027.0,61802543.0,68329120.0,35570517.0,27278817.0,35009898.0,33106532.0,115523480.0,172642000.0,159933822.0,35463428.0,82352698.0,97807101.0,95493733.0,100554369.0,149102643.0,116906622.0,79565288.0,96127072.0,122566164.0,106195086.0,118941937.0,141021276.0,138080225.0,22046441.0],"Franchise":[28254913.0,39744374.0,25994178.0,18965597.0,20119346.0,22570845.0,26321340.0,39164955.0,35105811.0,11124910.0,25556115.0,34513322.0,28176937.0,65476431.0,159628986.0,141689784.0,29295957.0,83931146.0,76039302.0,77067568.0,82867679.0,108684378.0,111158446.0,81223170.0,83388626.0,69796374.0,93036824.0,82130586.0,85443333.0,69118795.0,19514414.0],"Website":[5581532.0,3142052.0,2101351.0,4834625.0,13066216.0,6236400.0,3397167.0,6943086.0,9903975.0,3913073.0,7954955.0,4366667.0,6068468.0,19160586.0,17867568.0,25036036.0,6523198.0,11135340.0,6315315.0,6443694.0,8954505.0,9941441.0,16415991.0,17637387.0,22965766.0,13431532.0,10412162.0,8040541.0,8657628.0,7709459.0,5743243.0],"Event":[0,0,0,0,0,0,0,0,0,4877252.0,3533784.0,3050676.0,161768694.0,157210586.0,91434459.0,89772297.0,2003378.0,6244369.0,912162.0,1531532.0,2252252.0,2887387.0,5139640.0,0,0,0,80873874.0,0,0,0,0],"Dept Store":[213739.0,213739.0,0,0,0,213739.0,407748.0,0,213739.0,0,0,0,0,213739.0,194009.0,753018.0,0,0,194009.0,549144.0,194009.0,213739.0,522838.0,443919.0,559009.0,937162.0,854955.0,965766.0,407748.0,953604.0,46753109.0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},"2026":{"total":[73879415.0,509248728.0,492776361.0,621376964.0,72336123.0,67673338.0,525609130.0,259272350.0,250700976.0,368092690.0,192337890.0,194441122.0,431876761.0,146251330.0,155824669.0,164414397.0,358511828.0],"event":[14909910.0,432252252.0,393468468.0,514565315.0,0.0,0,305458896.0,152218468.0,143103604.0,180756757.0,0,0,0,0,0,40541.0,47207207.0],"channels":{"Marketplace":[33949086.0,39077625.0,37006478.0,39977214.0,39460601.0,25612764.0,150948909.0,52533079.0,46504239.0,62477561.0,97181723.0,87662779.0,349262747.0,68260881.0,84706006.0,68445983.0,150073750.0],"Own Store":[10662387.0,17490991.0,34427044.0,37988946.0,17513730.0,17061287.0,33741780.0,28275903.0,34748393.0,68128989.0,52816537.0,25385961.0,44204544.0,40442547.0,39174815.0,52513585.0,89126107.0],"Franchise":[10227341.0,14237544.0,24221442.0,24153799.0,12758040.0,21784375.0,30001945.0,23315117.0,22782697.0,51487490.0,38684179.0,15747336.0,32551481.0,26903037.0,29624479.0,38215509.0,67373627.0],"Website":[3775961.0,5734234.0,3652928.0,4691689.0,2603753.0,3214912.0,5457600.0,2929783.0,3207313.0,5241893.0,3655450.0,4158560.0,5857989.0,10644865.0,2319369.0,5198780.0,4731137.0],"Event":[14909910.0,432252252.0,393468468.0,514565315.0,0.0,0,305458896.0,152218468.0,143103604.0,180756757.0,0,0,0,0,0,40541.0,47207207.0],"Dept Store":[354730.0,456081.0,0,0,0,0,0,0,354730.0,0,0,0,0,0,0,0,0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,61486486.0,0,0,0,0,0]}}},"Calla The Label":{"2025":{"total":[3824252.0,4014358.0,5616676.0,7003751.0,2871089.0,10689611.0,82923176.0,21059932.0,22148912.0,8648723.0,14590418.0,19952550.0,10956694.0,21118765.0,30215531.0,32948535.0,18146780.0,12146342.0,16086393.0,17244347.0,15342893.0,8083137.0,23105257.0,8860564.0,12509456.0,10214107.0,15219113.0,14911504.0,11964807.0,8547094.0,1382000.0],"event":[0,0,0,0,0,0,37696050.0,0,0,0,0,0,3825400.0,5994600.0,5143000.0,7962950.0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"channels":{"Marketplace":[1229752.0,676858.0,3743576.0,2000501.0,569589.0,1887461.0,6648726.0,2899862.0,1501412.0,1803523.0,3394698.0,2230860.0,1263194.0,2294065.0,5131931.0,3489135.0,5047330.0,2026092.0,2451493.0,1893577.0,1094493.0,647087.0,6373457.0,2563114.0,3347406.0,1611157.0,2309613.0,1402854.0,4807.0,1707644.0,0],"Own Store":[1129500.0,525000.0,1398100.0,4786250.0,0,3062650.0,11232350.0,13989670.0,11103700.0,5218800.0,5223700.0,9437440.0,3420100.0,10638750.0,17013600.0,19419950.0,11524950.0,5610750.0,7484500.0,13046550.0,14523400.0,6976550.0,14333800.0,7098450.0,8802650.0,7853950.0,10811500.0,12759650.0,11960000.0,6839450.0,957000.0],"Franchise":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Website":[1465000.0,2812500.0,475000.0,217000.0,2301500.0,5739500.0,27346050.0,4170400.0,9543800.0,1626400.0,5972020.0,8284250.0,2448000.0,2191350.0,2927000.0,2076500.0,1574500.0,4509500.0,6150400.0,2304220.0,-275000.0,459500.0,2398000.0,-801000.0,359400.0,749000.0,2098000.0,749000.0,0,0,425000.0],"Event":[0,0,0,0,0,0,37696050.0,0,0,0,0,0,3825400.0,5994600.0,5143000.0,7962950.0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Dept Store":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},"2026":{"total":[17496971.0,23120360.0,44435572.0,61735071.0,21815883.0,26148294.0,29888082.0,26773284.0,37571534.0,28842678.0,22372118.0,20571203.0,33324472.0,21360072.0,23319252.0,22159772.0,55061210.0],"event":[2819505.0,11653514.0,25489865.0,22339459.0,2389414.0,695270.0,0,1856757.0,3724099.0,5293018.0,1889865.0,0,990090.0,0,0,560135.0,8441622.0],"channels":{"Marketplace":[3635755.0,6085541.0,7043590.0,3970161.0,2857820.0,3211972.0,13752328.0,12822536.0,14454620.0,4113759.0,9891262.0,8271293.0,16885463.0,8869081.0,6299245.0,10304682.0,8472737.0],"Own Store":[7352523.0,4211036.0,7711667.0,17260856.0,11488333.0,10999595.0,7706937.0,5894144.0,3298018.0,15994550.0,6987387.0,10077658.0,9638378.0,6087973.0,10495721.0,7604505.0,25647703.0],"Franchise":[0,0,1520766.0,2446982.0,0,1052883.0,480619.0,698405.0,526441.0,1079730.0,0,1052883.0,1174505.0,643559.0,3285360.0,0,5329959.0],"Website":[3689189.0,1170270.0,2669685.0,15717613.0,5080315.0,2879279.0,7948198.0,5501441.0,15568355.0,2361622.0,3603604.0,1169369.0,4636036.0,5759459.0,3238925.0,3690450.0,7169189.0],"Event":[2819505.0,11653514.0,25489865.0,22339459.0,2389414.0,695270.0,0,1856757.0,3724099.0,5293018.0,1889865.0,0,990090.0,0,0,560135.0,8441622.0],"Dept Store":[0,0,0,0,0,7309295.0,0,0,0,0,0,0,0,0,0,0,0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}},"Nada Puspita":{"2025":{"total":[320941738.0,373040630.0,482776036.0,319304368.0,463882195.0,447040796.0,771186095.0,870459477.0,922077503.0,1367181304.0,950283148.0,880345770.0,911853527.0,957769142.0,1301730227.0,1459626659.0,774767834.0,784962976.0,821864390.0,792495191.0,870745337.0,1187775721.0,1209108626.0,725604415.0,803522735.0,784015062.0,875446425.0,747608229.0,843705012.0,614523184.0,232591627.0],"event":[0,0,0,0,0,0,0,0,0,0,0,0,132811667.0,97038694.0,70466577.0,55159009.0,0,0,0,0,0,0,0,0,0,15439189.0,124166937.0,0,0,0,4775000.0],"channels":{"Marketplace":[85328981.0,79612371.0,311196946.0,126321129.0,92840885.0,151557213.0,145957354.0,184139337.0,145479295.0,143705385.0,273075676.0,270918523.0,211901088.0,167732059.0,236907263.0,186617361.0,214800426.0,130999555.0,229067730.0,183944041.0,168139753.0,118645766.0,104317047.0,70981114.0,76843255.0,96154077.0,70479751.0,38479754.0,23549123.0,13930435.0,96528755.0],"Own Store":[94689459.0,132047072.0,59584784.0,81647432.0,135446081.0,130458243.0,204476622.0,310102928.0,297802297.0,441905225.0,249948108.0,257303829.0,224429054.0,270932342.0,437231126.0,571983243.0,228194279.0,305302387.0,238983874.0,259027568.0,299078063.0,481977568.0,520675946.0,276518514.0,324940811.0,300895495.0,331931126.0,321997027.0,417234099.0,237756712.0,23217838.0],"Franchise":[120985991.0,138685214.0,90233495.0,85485968.0,127821761.0,109481340.0,321459561.0,307765743.0,395953829.0,371235766.0,281759571.0,262524959.0,260128908.0,317243119.0,430717117.0,538702865.0,269146633.0,256036700.0,286588615.0,291944673.0,333452026.0,497431730.0,503433840.0,318470113.0,330355119.0,315229155.0,303423097.0,345494989.0,365638412.0,325128326.0,40064764.0],"Website":[14444054.0,14915225.0,18647252.0,23947613.0,106178333.0,52235676.0,92674054.0,60333108.0,65256261.0,407568964.0,134593604.0,82497477.0,72621441.0,93306802.0,89714369.0,78968423.0,47093694.0,69811081.0,46018829.0,37516351.0,51422117.0,51624189.0,34883378.0,34804189.0,53051847.0,24892252.0,19813559.0,12701351.0,5451982.0,7598514.0,2668198.0],"Event":[0,0,0,0,0,0,0,0,0,0,0,0,132811667.0,97038694.0,70466577.0,55159009.0,0,0,0,0,0,0,0,0,0,15439189.0,124166937.0,0,0,0,4775000.0],"Dept Store":[5493252.0,7780748.0,3113559.0,1902225.0,1595135.0,3308324.0,6618505.0,8118360.0,17585820.0,2765964.0,10906189.0,7100982.0,9961369.0,11516126.0,36693775.0,28195757.0,15532802.0,22813252.0,21205342.0,20062559.0,18653378.0,38096468.0,45798414.0,24830486.0,18331703.0,31404892.0,25631955.0,28935108.0,31831396.0,30109198.0,65337072.0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},"2026":{"total":[432205587.0,953826906.0,1088738971.0,1153338925.0,397907704.0,581648414.0,872331056.0,665475585.0,723213795.0,1359508061.0,1055145367.0,568442008.0,1418112179.0,871363215.0,728708669.0,922738018.0,1206073366.0],"event":[93937207.0,538816036.0,518952252.0,500848649.0,42895946.0,0,84480901.0,146603063.0,70342883.0,193268468.0,0,0,0,0,0,172730351.0,78926369.0],"channels":{"Marketplace":[147305254.0,138547879.0,96464669.0,115561813.0,107527704.0,110751670.0,309449892.0,169665468.0,190962299.0,199572786.0,148735351.0,189731600.0,533299181.0,235879753.0,142607077.0,148291367.0,175852499.0],"Own Store":[68622658.0,91431892.0,216991532.0,219312748.0,99141486.0,191247748.0,170005000.0,164761892.0,206690856.0,417103739.0,402632477.0,146654865.0,335886577.0,263620676.0,220569369.0,256775586.0,421904640.0],"Franchise":[89451351.0,143734865.0,207838671.0,261596824.0,107122523.0,208432320.0,241564786.0,149469018.0,215933964.0,383691599.0,439160935.0,191890146.0,436095980.0,323604876.0,301097613.0,262236491.0,489985364.0],"Website":[28849189.0,29137027.0,29176126.0,31963333.0,36624955.0,66509144.0,51691486.0,24014279.0,19021261.0,40773559.0,34898604.0,24858559.0,94649414.0,29730676.0,36956306.0,37451892.0,23420090.0],"Event":[93937207.0,538816036.0,518952252.0,500848649.0,42895946.0,0,84480901.0,146603063.0,70342883.0,193268468.0,0,0,0,0,0,172730351.0,78926369.0],"Dept Store":[4039928.0,12159207.0,19315721.0,24055559.0,4595090.0,4707532.0,15138991.0,10961865.0,20262532.0,125097910.0,29718000.0,15306838.0,18181027.0,18527234.0,27478304.0,45252331.0,15984403.0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}},"TYGA":{"2025":{"total":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"event":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"channels":{"Marketplace":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Own Store":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Franchise":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Website":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Event":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Dept Store":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},"2026":{"total":[5141441.0,1981081.0,19247252.0,15366712.0,4054955.0,1174775.0,4060180.0,0,3516036.0,7534865.0,2961351.0,0,8223514.0,2340541.0,1170270.0,10901036.0,25270495.0],"event":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"channels":{"Marketplace":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Own Store":[5141441.0,1981081.0,19247252.0,9245270.0,4054955.0,1174775.0,2889910.0,0,1715135.0,7534865.0,2961351.0,0,8223514.0,2340541.0,1170270.0,10901036.0,25270495.0],"Franchise":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Website":[0,0,0,6121441.0,0,0,1170270.0,0,1800901.0,0,0,0,0,0,0,0,0],"Event":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Dept Store":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}},"ZytaDelia":{"2025":{"total":[116462673.0,102220030.0,685016260.0,254808480.0,192297843.0,177109197.0,207608043.0,141673122.0,146186280.0,139772305.0,192769555.0,163003108.0,323986958.0,433643121.0,336786531.0,286703717.0,219922354.0,250802148.0,289858975.0,249018328.0,367795414.0,253792927.0,241197954.0,284837358.0,319190286.0,224272281.0,179806540.0,126149522.0,117355625.0,78377969.0,25213963.0],"event":[0,0,0,0,0,0,0,0,0,0,0,0,173074820.0,208280180.0,121046847.0,113604505.0,0,0,0,0,0,0,0,0,0,0,19954955.0,0,0,0,0],"channels":{"Marketplace":[101737514.0,85251785.0,584870262.0,188020934.0,164335518.0,151911772.0,146717863.0,105780082.0,107252057.0,107656822.0,162306286.0,126752040.0,107733920.0,168295154.0,160294078.0,122353867.0,178224474.0,202884532.0,243289703.0,210954961.0,216696691.0,144209830.0,132045626.0,144704650.0,210216650.0,132124392.0,78153607.0,40449480.0,25842784.0,22931254.0,19220467.0],"Own Store":[8976757.0,7313649.0,9001279.0,5997198.0,5731811.0,8930180.0,11163730.0,14144054.0,11428694.0,19210450.0,9727297.0,15505054.0,21547162.0,15521676.0,25162495.0,18691649.0,19985811.0,20287072.0,11979847.0,9848495.0,35040739.0,41768901.0,30511225.0,19723784.0,33582784.0,25944342.0,25976378.0,27296063.0,33337649.0,16893468.0,1544351.0],"Franchise":[4906646.0,8745273.0,54873619.0,18256342.0,7822692.0,8183596.0,12128384.0,20799211.0,21620368.0,9809267.0,14298945.0,11849798.0,15794119.0,16439646.0,28354723.0,30392220.0,15933511.0,22745679.0,26158596.0,20171376.0,48612894.0,65249332.0,77012094.0,61104682.0,46403780.0,45965268.0,55391734.0,57287582.0,57580373.0,38553246.0,2591757.0],"Website":[841757.0,909324.0,36271100.0,42534005.0,14407822.0,8083649.0,4515270.0,949775.0,5885162.0,3095766.0,6437027.0,8896216.0,5836937.0,25106465.0,1928387.0,1661477.0,5778559.0,4884865.0,8430829.0,8043495.0,5374820.0,2564865.0,1629009.0,58241214.0,28987072.0,20238279.0,329865.0,1116396.0,594820.0,0,680405.0],"Event":[0,0,0,0,0,0,0,0,0,0,0,0,173074820.0,208280180.0,121046847.0,113604505.0,0,0,0,0,0,0,0,0,0,0,19954955.0,0,0,0,0],"Dept Store":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1176982.0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,33082796.0,0,0,0,0,0,0,0,0,0,0,0,0,0,62070270.0,0,0,1063029.0,0,0,0,0,0,0,0]}},"2026":{"total":[104169058.0,1003662983.0,1150331255.0,1160648013.0,193048605.0,109854503.0,649488322.0,438744418.0,414358846.0,398861900.0,202077543.0,186134942.0,1180513592.0,156167888.0,173335896.0,298404459.0,364656673.0],"event":[7054054.0,794972252.0,994328288.0,1017678198.0,95315315.0,0,313121622.0,267893333.0,203160360.0,216085586.0,0,0,0,0,0,120198198.0,148565766.0],"channels":{"Marketplace":[93977346.0,115862082.0,106126660.0,123684139.0,88976713.0,96461170.0,315444718.0,162091625.0,191612900.0,151350909.0,167731687.0,138593140.0,1056431610.0,137871492.0,151917878.0,148938153.0,174225862.0],"Own Store":[2624324.0,7268288.0,8573243.0,12445135.0,5659279.0,12989730.0,8440000.0,6303604.0,15448649.0,26796036.0,27854144.0,12936036.0,68233333.0,14020721.0,18290991.0,25012252.0,39901081.0],"Franchise":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Website":[513333.0,10373333.0,41303063.0,6840541.0,3097297.0,403604.0,12481982.0,2455856.0,4136937.0,4629369.0,6491712.0,34605766.0,55848649.0,4275676.0,3127027.0,4255856.0,1963964.0],"Event":[7054054.0,794972252.0,994328288.0,1017678198.0,95315315.0,0,313121622.0,267893333.0,203160360.0,216085586.0,0,0,0,0,0,120198198.0,148565766.0],"Dept Store":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"Affiliate":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,75187027.0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}},"__group__":{"2025":{"total":[8935178565.0,5739536954.0,6519120058.0,4521779235.0,5680535355.0,5221860117.0,6545112128.0,8392325040.0,7262205891.0,5931700840.0,5857155561.0,5359123212.0,7516078900.0,8656292033.0,9511256324.0,8957864901.0,5350487380.0,5697958946.0,6150775377.0,5627288548.0,6225345006.0,7496625621.0,7120983993.0,5359871979.0,8097491107.0,5981124987.0,6523180605.0,5314396789.0,5073956543.0,4052473784.0,1752303251.0],"event":[0,0,0,0,0,0,37696050.0,0,0,5285360.0,4281532.0,7903153.0,2130611661.0,1929406041.0,1411716108.0,953514076.0,2012387.0,6262387.0,916667.0,1536036.0,2256757.0,2905405.0,5153153.0,296202703.0,346337838.0,15439189.0,1079455225.0,0,0,0,4775000.0],"channels":{"Marketplace":[5640453538.0,2755896584.0,4380198338.0,2387110331.0,1981025628.0,1995047750.0,2617197161.0,2159074324.0,1788803897.0,1657279432.0,1648789817.0,1412881348.0,1254395905.0,2012375936.0,1943758119.0,1596380562.0,1606845107.0,1292456939.0,1762050663.0,1471864682.0,1460752035.0,1056223693.0,971621572.0,929819862.0,1323588297.0,978761529.0,657534595.0,377783077.0,260580795.0,244664692.0,696094432.0],"Own Store":[1479184005.0,1310513423.0,786316184.0,856196196.0,1688980144.0,1534440713.0,1572754233.0,3370541156.0,2637943024.0,1984548440.0,2032604736.0,1897788665.0,1439476496.0,2298119345.0,3186917132.0,3371288310.0,1704886842.0,2198618678.0,2131321464.0,1950871577.0,2335527337.0,3320383784.0,3134936602.0,2093208090.0,2667936650.0,2634722662.0,2341057698.0,2544647278.0,2649747468.0,2065541927.0,258573739.0],"Franchise":[1107769674.0,984341987.0,711467573.0,688122948.0,1443810176.0,1202514106.0,1092289574.0,2175519402.0,1797835899.0,1332338352.0,1421215744.0,1403171116.0,1057387405.0,1429568011.0,2116889272.0,2042924241.0,1209087093.0,1434819910.0,1449262145.0,1302010258.0,1622376662.0,2212874924.0,2289093188.0,1467227504.0,1621237343.0,1756105156.0,1725278537.0,1693168848.0,1643616294.0,1334651232.0,135932467.0],"Website":[651508006.0,479350563.0,612796927.0,536037895.0,509337066.0,447213277.0,761304663.0,564449004.0,892141079.0,901324914.0,681827769.0,557426551.0,524979351.0,830250935.0,636254441.0,788334838.0,735859590.0,665248500.0,549582054.0,773024878.0,634544287.0,617246752.0,435664216.0,450180890.0,567071189.0,406965568.0,560954036.0,364242657.0,282471850.0,242855429.0,22413694.0],"Event":[0,0,0,0,0,0,37696050.0,0,0,5285360.0,4281532.0,7903153.0,2130611661.0,1929406041.0,1411716108.0,953514076.0,2012387.0,6262387.0,916667.0,1536036.0,2256757.0,2905405.0,5153153.0,296202703.0,346337838.0,15439189.0,1079455225.0,0,0,0,4775000.0],"Dept Store":[56263342.0,72902595.0,28341036.0,54311865.0,57382342.0,42644270.0,80458054.0,122741153.0,145481991.0,50924342.0,68435964.0,79952378.0,82201054.0,88730090.0,215721252.0,205422874.0,91796360.0,100552532.0,104255117.0,127981117.0,107817658.0,286991063.0,284515261.0,122169901.0,147999631.0,189130883.0,158900514.0,214085333.0,237540135.0,164760505.0,634513920.0],"Affiliate":[0,136531801.0,0,0,0,0,350329598.0,0,0,0,0,0,0,67841675.0,0,0,0,0,153387267.0,0,0,0,0,0,0,0,0,0,0,0,0],"One Time Customer":[0,0,0,0,0,0,33082796.0,0,0,0,0,0,1027027027.0,0,0,0,0,0,0,0,62070270.0,0,0,1063029.0,1423320159.0,0,0,120469595.0,0,0,0]}},"2026":{"total":[4038199529.0,17070383291.0,18619048862.0,20372617792.0,3676883306.0,2724822051.0,6319043499.0,5712327206.0,6491534179.0,7904819386.0,6114431939.0,3508693295.0,7724336687.0,6777528062.0,6749367124.0,9625999902.0,12763258355.0],"event":[1258017072.0,14444645405.0,15480758243.0,17035482523.0,1437305631.0,18003829.0,2397520878.0,2382956757.0,2136830946.0,2105648198.0,123247811.0,43139640.0,35683784.0,24594595.0,26274775.0,1872410306.0,1890903126.0],"channels":{"Marketplace":[548186586.0,652822967.0,499741624.0,529952010.0,684474910.0,619130640.0,1384015360.0,853569034.0,1008499188.0,808611185.0,888337443.0,879115608.0,3657760925.0,3430714639.0,2983729364.0,3120787739.0,4343750422.0],"Own Store":[687636929.0,760578058.0,1264841486.0,1347093063.0,672292252.0,918024771.0,1127254887.0,1052866235.0,1492339662.0,2326018820.0,2593482545.0,1165343491.0,1649367074.0,1436604594.0,1653156952.0,1919589647.0,3643611045.0],"Franchise":[510841689.0,680231149.0,870419309.0,979361001.0,548072046.0,724313777.0,824518065.0,786087820.0,1050514307.0,1511021222.0,1665769153.0,853640556.0,1345014834.0,1241262213.0,1383719390.0,1402420653.0,2198855117.0],"Website":[1003531063.0,365048351.0,433642793.0,387870618.0,303584683.0,403140901.0,412341715.0,576600405.0,736783310.0,547313560.0,724216582.0,433292072.0,954646790.0,575779112.0,599753340.0,1155597317.0,595960637.0],"Event":[1258017072.0,14444645405.0,15480758243.0,17035482523.0,1437305631.0,18003829.0,2397520878.0,2382956757.0,2136830946.0,2105648198.0,123247811.0,43139640.0,35683784.0,24594595.0,26274775.0,1872410306.0,1890903126.0],"Dept Store":[29986189.0,45760333.0,69645405.0,92858577.0,31153784.0,42208133.0,58762595.0,60246955.0,66566766.0,557612234.0,119378405.0,72675441.0,81863279.0,68572910.0,102733304.0,123298457.0,90178007.0],"Affiliate":[0,46110000.0,0,0,0,0,114630000.0,0,0,48594166.0,0,0,0,0,0,31895783.0,0],"One Time Customer":[0,75187027.0,0,0,0,0,0,0,0,0,0,61486486.0,0,0,0,0,0]}}}},"ne":{"Benang Jarum":{"2025":[730380705.0,814358920.0,1013057930.0,660965626.0,548034991.0,623161241.0,691802732.0,955063268.0,1017368337.0,509788860.0,657039905.0,685022970.0,711180608.0,1165126030.0,1468442885.0,1419781718.0,798529239.0,904427270.0,873363632.0,753071654.0,949224142.0,1305364936.0,1290617284.0,869634478.0,2418874978.0,928983626.0,755992216.0,813412149.0,898401898.0,675266142.0,311235654.0],"2026":[1456392347.0,594635491.0,764748170.0,746088679.0,470992276.0,407691751.0,575059995.0,781065814.0,884107799.0,1024978743.0,1632974140.0,518164016.0,792632618.0,631435906.0,622260109.0,1472212354.0,1680215283.0]},"Buttonscarves":{"2025":[7608945437.0,4289313229.0,4100364493.0,3149364422.0,4329655912.0,3867848555.0,4669184857.0,6256244926.0,4995952672.0,3799249839.0,3927863691.0,3496407407.0,3623526310.0,3802724543.0,4596293773.0,4542107045.0,3391923272.0,3343990332.0,3571124809.0,3357828667.0,3599375120.0,4332500292.0,3990441601.0,2893851964.0,3884220411.0,3720595568.0,3455916588.0,3314834520.0,2910432518.0,2406733078.0,1078457930.0],"2026":[809618313.0,1316956389.0,1510251911.0,1634012526.0,1220022805.0,1509973318.0,1968147273.0,1726610621.0,2461565193.0,3206756080.0,2885205583.0,1977800365.0,3824824723.0,4923113615.0,5018473484.0,5156288784.0,7465707338.0]},"Buttonscarves Beauty":{"2025":[154623760.0,156589786.0,232288664.0,130332588.0,143793325.0,96010717.0,122407226.0,147824314.0,158472187.0,101774448.0,110327311.0,106488254.0,113675028.0,657817866.0,562727693.0,439909615.0,145185515.0,395367491.0,577560513.0,456094324.0,420605343.0,406203204.0,361360118.0,280880495.0,312835403.0,313044343.0,305466390.0,297480865.0,292096681.0,269026318.0,103422078.0],"2026":[58969505.0,76996476.0,99307893.0,106811649.0,72336123.0,67673338.0,220150234.0,107053882.0,107597372.0,187335933.0,192337890.0,194441122.0,431876761.0,146251330.0,155824669.0,164373856.0,311304621.0]},"Calla The Label":{"2025":[3824252.0,4014358.0,5616676.0,7003751.0,2871089.0,10689611.0,45227126.0,21059932.0,22148912.0,8648723.0,14590418.0,19952550.0,7131294.0,15124165.0,25072531.0,24985585.0,18146780.0,12146342.0,16086393.0,17244347.0,15342893.0,8083137.0,23105257.0,8860564.0,12509456.0,10214107.0,15219113.0,14911504.0,11964807.0,8547094.0,1382000.0],"2026":[14677466.0,11466846.0,18945707.0,39395612.0,19426469.0,25453024.0,29888082.0,24916527.0,33847435.0,23549660.0,20482253.0,20571203.0,32334382.0,21360072.0,23319252.0,21599637.0,46619588.0]},"Nada Puspita":{"2025":[320941738.0,373040630.0,482776036.0,319304368.0,463882195.0,447040796.0,771186095.0,870459477.0,922077503.0,1367181304.0,950283148.0,880345770.0,779041860.0,860730448.0,1231263650.0,1404467650.0,774767834.0,784962976.0,821864390.0,792495191.0,870745337.0,1187775721.0,1209108626.0,725604415.0,803522735.0,768575873.0,751279488.0,747608229.0,843705012.0,614523184.0,227816627.0],"2026":[338268380.0,415010870.0,569786719.0,652490276.0,355011758.0,581648414.0,787850155.0,518872522.0,652870912.0,1166239593.0,1055145367.0,568442008.0,1418112179.0,871363215.0,728708669.0,750007667.0,1127146997.0]},"TYGA":{"2025":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"2026":[5141441.0,1981081.0,19247252.0,15366712.0,4054955.0,1174775.0,4060180.0,0,3516036.0,7534865.0,2961351.0,0,8223514.0,2340541.0,1170270.0,10901036.0,25270495.0]},"ZytaDelia":{"2025":[116462673.0,102220030.0,685016260.0,254808480.0,192297843.0,177109197.0,207608043.0,141673122.0,146186280.0,139772305.0,192769555.0,163003108.0,150912138.0,225362941.0,215739684.0,173099212.0,219922354.0,250802148.0,289858975.0,249018328.0,367795414.0,253792927.0,241197954.0,284837358.0,319190286.0,224272281.0,159851585.0,126149522.0,117355625.0,78377969.0,25213963.0],"2026":[97115004.0,208690731.0,156002967.0,142969815.0,97733290.0,109854503.0,336366700.0,170851085.0,211198486.0,182776314.0,202077543.0,186134942.0,1180513592.0,156167888.0,173335896.0,178206261.0,216090907.0]},"__group__":{"2025":[8935178565.0,5739536954.0,6519120058.0,4521779235.0,5680535355.0,5221860117.0,6507416078.0,8392325040.0,7262205891.0,5926415480.0,5852874029.0,5351220059.0,5385467239.0,6726885992.0,8099540216.0,8004350825.0,5348474993.0,5691696559.0,6149858710.0,5625752512.0,6223088249.0,7493720216.0,7115830840.0,5063669276.0,7751153269.0,5965685798.0,5443725380.0,5314396789.0,5073956543.0,4052473784.0,1747528251.0],"2026":[2780182457.0,2625737886.0,3138290619.0,3337135269.0,2239577675.0,2706818222.0,3921522621.0,3329370449.0,4354703233.0,5799171188.0,5991184128.0,3465553655.0,7688652903.0,6752933467.0,6723092349.0,7753589596.0,10872355229.0]}},"summary":{"Benang Jarum":{"t25_17":14856839973.0,"t25_full":28689935257.0,"t26_17":17720823009.0,"ev26_17":2665167518.0,"ne26_17":15055655491.0,"ne25_17":14469105965.0,"g_17":19,"avg_all":1042401353.0,"proj_all":31272040604.0,"needed_full":10969112248.0,"needed_per_day":843777865.0,"remaining":13,"proj_vs_25":9},"Buttonscarves":{"t25_17":78995907321.0,"t25_full":126268048559.0,"t26_17":99775670326.0,"ev26_17":51160342005.0,"ne26_17":48615328321.0,"ne25_17":74446970383.0,"g_17":26,"avg_all":5869157078.0,"proj_all":176074712340.0,"needed_full":26492378233.0,"needed_per_day":2037875249.0,"remaining":13,"proj_vs_25":39},"Buttonscarves Beauty":{"t25_17":4093899423.0,"t25_full":8985184205.0,"t26_17":4884624072.0,"ev26_17":2183981418.0,"ne26_17":2700642654.0,"ne25_17":3580248297.0,"g_17":19,"avg_all":287330828.0,"proj_all":8619924833.0,"needed_full":4100560133.0,"needed_per_day":315427703.0,"remaining":13,"proj_vs_25":-4},"Calla The Label":{"t25_17":316729753.0,"t25_full":492346767.0,"t26_17":515995828.0,"ev26_17":88142613.0,"ne26_17":427853215.0,"ne25_17":256107753.0,"g_17":63,"avg_all":30352696.0,"proj_all":910580873.0,"needed_full":0,"needed_per_day":0.0,"remaining":13,"proj_vs_25":85},"Nada Puspita":{"t25_17":13574266449.0,"t25_full":24868235379.0,"t26_17":14998777826.0,"ev26_17":2441802125.0,"ne26_17":12556975701.0,"ne25_17":13218790502.0,"g_17":10,"avg_all":882281049.0,"proj_all":26468431458.0,"needed_full":9869457553.0,"needed_per_day":759189043.0,"remaining":13,"proj_vs_25":6},"TYGA":{"t25_17":0,"t25_full":0,"t26_17":112944504.0,"ev26_17":0,"ne26_17":112944504.0,"ne25_17":0,"g_17":null,"avg_all":6643794.0,"proj_all":199313831.0,"needed_full":0,"needed_per_day":0.0,"remaining":13,"proj_vs_25":null},"ZytaDelia":{"t25_17":4119969577.0,"t25_full":7127638867.0,"t26_17":8184458896.0,"ev26_17":4178372972.0,"ne26_17":4006085924.0,"ne25_17":3503963225.0,"g_17":99,"avg_all":481438759.0,"proj_all":14443162758.0,"needed_full":0,"needed_per_day":0.0,"remaining":13,"proj_vs_25":103},"__group__":{"t25_17":115957612494.0,"t25_full":196431389030.0,"t26_17":146193294465.0,"ev26_17":62713423519.0,"ne26_17":83479870946.0,"ne25_17":109475186126.0,"g_17":26,"avg_all":8599605557.0,"proj_all":257988166703.0,"needed_full":50238094565.0,"needed_per_day":3864468813.0,"remaining":13,"proj_vs_25":31}},"brandDaily26":{"Benang Jarum":[1587966671.0,805007113.0,1178874296.0,1074799151.0,496523808.0,428349409.0,755978914.0,899755003.0,1137612304.0,1263158923.0,1754332086.0,561303656.0,827461447.0,656931401.0,648534884.0,1689149291.0,1955084652.0],"Buttonscarves":[1817340385.0,13773536119.0,14644645154.0,16285352955.0,2491196228.0,1509973318.0,3481687814.0,3422306567.0,3924560688.0,4478820269.0,2885205583.0,1977800365.0,3824824723.0,4923113615.0,5018473484.0,6518232928.0,8798600131.0],"Buttonscarves Beauty":[73879415.0,509248728.0,492776361.0,621376964.0,72336123.0,67673338.0,525609130.0,259272350.0,250700976.0,368092690.0,192337890.0,194441122.0,431876761.0,146251330.0,155824669.0,164414397.0,358511828.0],"Calla The Label":[17496971.0,23120360.0,44435572.0,61735071.0,21815883.0,26148294.0,29888082.0,26773284.0,37571534.0,28842678.0,22372118.0,20571203.0,33324472.0,21360072.0,23319252.0,22159772.0,55061210.0],"Nada Puspita":[432205587.0,953826906.0,1088738971.0,1153338925.0,397907704.0,581648414.0,872331056.0,665475585.0,723213795.0,1359508061.0,1055145367.0,568442008.0,1418112179.0,871363215.0,728708669.0,922738018.0,1206073366.0],"TYGA":[5141441.0,1981081.0,19247252.0,15366712.0,4054955.0,1174775.0,4060180.0,0,3516036.0,7534865.0,2961351.0,0,8223514.0,2340541.0,1170270.0,10901036.0,25270495.0],"ZytaDelia":[104169058.0,1003662983.0,1150331255.0,1160648013.0,193048605.0,109854503.0,649488322.0,438744418.0,414358846.0,398861900.0,202077543.0,186134942.0,1180513592.0,156167888.0,173335896.0,298404459.0,364656673.0]},"brandDaily25":{"Benang Jarum":[730380705.0,814358920.0,1013057930.0,660965626.0,548034991.0,623161241.0,691802732.0,955063268.0,1017368337.0,510192464.0,657774139.0,689857429.0,857395022.0,1241021525.0,1566124417.0,1481751988.0,798529239.0],"Buttonscarves":[7608945437.0,4289313229.0,4100364493.0,3149364422.0,4329655912.0,3867848555.0,4669184857.0,6256244926.0,4995952672.0,3799254344.0,3927877205.0,3496425425.0,5136442977.0,5187711029.0,5622237467.0,5167152090.0,3391932281.0],"Buttonscarves Beauty":[154623760.0,156589786.0,232288664.0,130332588.0,143793325.0,96010717.0,122407226.0,147824314.0,158472187.0,106651700.0,113861095.0,109538930.0,275443722.0,815028452.0,654162152.0,529681912.0,147188893.0],"Calla The Label":[3824252.0,4014358.0,5616676.0,7003751.0,2871089.0,10689611.0,82923176.0,21059932.0,22148912.0,8648723.0,14590418.0,19952550.0,10956694.0,21118765.0,30215531.0,32948535.0,18146780.0],"Nada Puspita":[320941738.0,373040630.0,482776036.0,319304368.0,463882195.0,447040796.0,771186095.0,870459477.0,922077503.0,1367181304.0,950283148.0,880345770.0,911853527.0,957769142.0,1301730227.0,1459626659.0,774767834.0],"TYGA":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"ZytaDelia":[116462673.0,102220030.0,685016260.0,254808480.0,192297843.0,177109197.0,207608043.0,141673122.0,146186280.0,139772305.0,192769555.0,163003108.0,323986958.0,433643121.0,336786531.0,286703717.0,219922354.0]}};
 
-/* -----------------------------
-   Brand meta
------------------------------ */
-const BRANDS = [
-  { code: "BS",  name: "Buttonscarves",        shopifyPct: 0.40 },
-  { code: "BSB", name: "Buttonscarves Beauty", shopifyPct: 0.40 },
-  { code: "NP",  name: "Nada Puspita",         shopifyPct: 0.40 },
-  { code: "TYGA",name: "TYGA",                 shopifyPct: 0.40 },
-  { code: "BJ",  name: "Benang Jarum",         shopifyPct: 0.45 },
-  { code: "ZD",  name: "ZytaDelia",            shopifyPct: 1.00 },
-  { code: "CL",  name: "Calla",                shopifyPct: 1.00 }
-];
-
-/* -----------------------------
-   Datasets
------------------------------ */
-const DATASET_DAY1 = {
-  BS:   { web: 402538502, web_trx: 162, app: 87819820,  app_trx: 130, mp: 5999411685, mp_trx: 12788 },
-  BSB:  { web:   3841667, web_trx:  24, app:  1739865,  app_trx:   7, mp:   93033295, mp_trx:   311 },
-  NP:   { web:  14444054, web_trx:  24, app:        0,  app_trx:   0, mp:   99697072, mp_trx:   276 },
-  BJ:   { web: 116238514, web_trx:  81, app: 22578829,  app_trx:  18, mp:  289592466, mp_trx:   509 },
-  ZD:   { web:    841757, web_trx:   3, app:        0,  app_trx:   0, mp:  119822728, mp_trx:   490 },
-  CL:   { web:   1465000, web_trx:   2, app:        0,  app_trx:   0, mp:    1409910, mp_trx:     2 },
-  TYGA: { web:         0, web_trx:   0, app:        0,  app_trx:   0, mp:          0, mp_trx:     0 }
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+const REMAINING=13, TOTAL_DAYS=30;
+const C={gold:'#b8860b',teal:'#0d7377',rose:'#e11d48',mkt:'#2563eb',own:'#7c3aed',fra:'#059669',web:'#db2477',evt:'#d97706'};
+const BC={'Buttonscarves':'#b8860b','Benang Jarum':'#2563eb','Buttonscarves Beauty':'#db2477','ZytaDelia':'#059669','Nada Puspita':'#7c3aed','Calla The Label':'#d97706','TYGA':'#0d7377'};
+const CHC={'Marketplace':C.mkt,'Own Store':C.own,'Franchise':C.fra,'Website':C.web};
+const EV={
+  'Buttonscarves':{mrf:true,smb:true,gema:true},'Benang Jarum':{mrf:true,smb:true,gema:true},
+  'Buttonscarves Beauty':{mrf:true,smb:true,gema:true},'ZytaDelia':{mrf:true,smb:true,gema:true},
+  'Nada Puspita':{mrf:true,smb:true,gema:true},'Calla The Label':{mrf:true,smb:false,gema:false},
+  'TYGA':{mrf:false,smb:false,gema:false},'__group__':{mrf:true,smb:true,gema:true}
 };
 
-const DATASET_MONTH = {
-  BJ:   { mp:  7208647358, mp_trx: 13320, app:  720822297, app_trx:  615, web: 2360790991, web_trx: 1951 },
-  BS:   { mp: 38891831982, mp_trx:112843, app: 4746277876, app_trx: 5623, web: 7233265134, web_trx: 3816 },
-  BSB:  { mp:  4319044729, mp_trx: 17062, app:  134812634, app_trx: 1499, web:  165088324, web_trx: 1413 },
-  CL:   { mp:    83882450, mp_trx:   129, app:          0, app_trx:    0, web:  100296790, web_trx:  158 },
-  NP:   { mp:  5176555186, mp_trx: 12489, app:          0, app_trx:    0, web: 1907254189, web_trx: 2362 },
-  ZD:   { mp:  5411771884, mp_trx: 23298, app:          0, app_trx:    0, web:  314254633, web_trx:  477 },
-  TYGA: { mp:          0, mp_trx:     0, app:          0, app_trx:    0, web:          0, web_trx:    0 }
+const BRAND_INFO={
+  'Buttonscarves':{type:'Hijab, Scarves & Lifestyle',site:'buttonscarves.com',desc:"Indonesia's leading hijab and modest lifestyle brand. Offers scarves, bags, apparel, footwear, accessories, prayer sets, and home goods."},
+  'Benang Jarum':{type:'Modest Apparel & Fashion',site:'benangjarum.com',desc:'Modest apparel and fashion brand for women, offering contemporary modest clothing including outerwear, tops, and dresses.'},
+  'Buttonscarves Beauty':{type:'Beauty & Skincare',site:'buttonscarves.com',desc:'Beauty and skincare extension of the Buttonscarves brand, sold alongside the main fashion collection.'},
+  'ZytaDelia':{type:'Scarves, Bags & Footwear',site:'zytadelia.com',desc:'Value-accessible scarves, bags, and footwear brand with a strong live-shopping and promotions-driven sales model.'},
+  'Nada Puspita':{type:'Hijab & Prayer Essentials',site:'nadapuspita.com',desc:'Hijab specialist brand offering scarves, shawls, instant hijab, bags, and prayer sets.'},
+  'Calla The Label':{type:'Contemporary Fashion',site:'callathelabel.com',desc:'Contemporary fashion brand for women and men — tops, dresses, bottoms, outerwear, and sports. Known for artist collaborations.'},
+  'TYGA':{type:'Streetwear & Contemporary',site:'tygaofficial.com',desc:"New streetwear and contemporary brand (est. ~July 2025) under the 'Unstigmatized' theme. Offers tops, bottoms, outerwear, bags, and accessories."},
+  '__group__':{type:'All Brands · 7 Labels',site:'modinity.com',desc:'Combined performance of all Modinity Group brands.'}
 };
 
-// Set Full Month as default
-let ACTIVE_DATASET = DATASET_MONTH;
-
-/* -----------------------------
-   Helpers
------------------------------ */
-const el = id => document.getElementById(id);
-
-function parseNumber(str) {
-  const s = String(str ?? "").replace(/,/g, "").trim();
-  const n = Number(s);
-  return Number.isFinite(n) ? n : 0;
-}
-function fmtNumber(n) { return Math.round(n).toLocaleString("en-US"); }
-function fmtIDR(n) { return "Rp " + fmtNumber(n); }
-function fmtDeltaPct(n) { const sign = n >= 0 ? "+" : ""; return sign + n.toFixed(1) + "%"; }
-function clamp01(x){ return Math.max(0, Math.min(1, x)); }
-
-const compactFmt = new Intl.NumberFormat('en-US', {
-  style: 'currency', currency: 'IDR', notation: 'compact', maximumFractionDigits: 1
-});
-function fmtCompact(n) {
-  let s = compactFmt.format(n);
-  return s.replace('IDR', 'Rp');
-}
-
-function attachNumberFormatting(input) {
-  input.addEventListener("blur", () => input.value = fmtNumber(parseNumber(input.value)));
-  input.addEventListener("focus", () => { input.value = String(parseNumber(input.value)); input.select(); });
-}
-
-/* -----------------------------
-   Growth Logic (Slider vs Input)
------------------------------ */
-const growthSlider = el("growthSlider");
-const growthInput = el("growthInput");
-const growthToggle = el("growthCustomToggle");
-const growthSliderContainer = el("growthSliderContainer");
-const growthInputContainer = el("growthInputContainer");
-const growthSliderVal = el("growthSliderVal");
-
-// Sync functions
-function updateGrowthDisplay() {
-  growthSliderVal.textContent = `${growthSlider.value}%`;
-  recalc();
-}
-
-growthSlider.addEventListener("input", updateGrowthDisplay);
-
-growthToggle.addEventListener("change", () => {
-  if (growthToggle.checked) {
-    // Switch to Input
-    growthSliderContainer.classList.add("hidden");
-    growthInputContainer.classList.remove("hidden");
-    growthInput.value = growthSlider.value; // Sync value
-  } else {
-    // Switch to Slider
-    growthInputContainer.classList.add("hidden");
-    growthSliderContainer.classList.remove("hidden");
-    // Clamp value to -100 / 100 for slider
-    let val = parseNumber(growthInput.value);
-    if (val > 100) val = 100;
-    if (val < -100) val = -100;
-    growthSlider.value = val;
-    updateGrowthDisplay();
-  }
-  recalc();
-});
-
-growthInput.addEventListener("input", recalc);
-
-// Get current effective growth value
-function getGrowthValue() {
-  if (growthToggle.checked) {
-    return parseNumber(growthInput.value);
-  } else {
-    return parseNumber(growthSlider.value);
-  }
-}
-
-
-/* -----------------------------
-   Logic
------------------------------ */
-function projTrx(projectedSales, baseSales, baseTrx) {
-  const trx = Number(baseTrx) || 0;
-  const sales = Number(baseSales) || 0;
-  if (trx <= 0 || sales <= 0) return 0;
-  const aov = sales / trx;
-  if (aov <= 0) return 0;
-  return projectedSales / aov;
-}
-
-function calcBrand({
-  web, web_trx, app, app_trx, mp, mp_trx,
-  shopifyPct, mpPct, mpPctProj, tapcartPct, midtransPerTrx,
-  fsEligiblePct, fsAvgSubsidy,
-  ownedSharePct, growthPct
-}) {
-  const baseTotalSales = web + app + mp;
-  const baseOwned = web + app;
-  const baseMp = mp;
-  
-  // Apply Growth to Total Sales
-  const growthFactor = 1 + (growthPct / 100);
-  const projTotalSales = baseTotalSales * growthFactor;
-
-  // Split projected total sales based on slider
-  const ownedShare = clamp01(ownedSharePct / 100);
-  const ownedP = projTotalSales * ownedShare;
-  const mpP = projTotalSales - ownedP;
-
-  // Split Owned into Web vs App (maintain baseline ratio)
-  const appRatio = baseOwned > 0 ? (app / baseOwned) : 0;
-  const webRatio = 1 - appRatio;
-  const appP = ownedP * appRatio;
-  const webP = ownedP * webRatio;
-
-  // Project Transactions
-  const webTrxP = projTrx(webP, web, web_trx);
-  const appTrxP = projTrx(appP, app, app_trx);
-  const mpTrxP  = projTrx(mpP,  mp,  mp_trx);
-
-  // --- BASELINE FEES ---
-  const baseShopify  = (shopifyPct/100) * (web + app);
-  const baseTapcart  = (tapcartPct/100) * app;
-  const baseMidtrans = midtransPerTrx * (web_trx + app_trx);
-  const baseFreeShip = (fsEligiblePct/100) * (web_trx + app_trx) * fsAvgSubsidy;
-  const baseMpFee    = (mpPct/100) * mp; 
-  const baseFee = baseShopify + baseTapcart + baseMidtrans + baseFreeShip + baseMpFee;
-
-  // --- PROJECTED FEES ---
-  const projShopify  = (shopifyPct/100) * (webP + appP);
-  const projTapcart  = (tapcartPct/100) * appP;
-  const projMidtrans = midtransPerTrx * (webTrxP + appTrxP);
-  const projFreeShip = (fsEligiblePct/100) * (webTrxP + appTrxP) * fsAvgSubsidy;
-  const projMpFee    = (mpPctProj/100) * mpP; 
-  const projFee = projShopify + projTapcart + projMidtrans + projFreeShip + projMpFee;
-
-  // Split Fees (Website+App vs MP)
-  const projFeeOwned = projShopify + projTapcart + projMidtrans + projFreeShip;
-  const projFeeMp    = projMpFee;
-
-  const delta = projFee - baseFee;
-  const deltaPct = baseFee ? (delta / baseFee) * 100 : 0;
-
-  return { webP, appP, mpP, webTrxP, appTrxP, mpTrxP, baseFee, projFee, projFeeOwned, projFeeMp, delta, deltaPct, totalSales: projTotalSales, baseOwned, baseMp };
-}
-
-/* -----------------------------
-   Build DOM
------------------------------ */
-function buildTables() {
-  const inputTbody = el("inputRows");
-  const resultTbody = el("resultRows");
-  const filterSelect = el("summaryFilter");
-  
-  inputTbody.innerHTML = "";
-  resultTbody.innerHTML = "";
-  filterSelect.innerHTML = '<option value="ALL">Total (All Brands)</option>';
-
-  // 1. Create TOTAL Row in Input Table (First Row)
-  const totalRow = document.createElement("tr");
-  totalRow.className = "bg-indigo-50 dark:bg-slate-900 font-bold border-b-2 border-slate-200 dark:border-slate-800";
-  totalRow.id = "inputTotalRow";
-  // We will populate values in recalc()
-  totalRow.innerHTML = `
-      <td class="px-4 py-3">Total</td>
-      <td class="px-2 py-3 text-right text-xs text-slate-400">—</td>
-      <td class="px-2 py-3 text-right text-xs" id="totWebSales">0</td>
-      <td class="px-2 py-3 text-right text-xs" id="totWebTrx">0</td>
-      <td class="px-2 py-3 text-right text-xs" id="totAppSales">0</td>
-      <td class="px-2 py-3 text-right text-xs" id="totAppTrx">0</td>
-      <td class="px-2 py-3 text-right text-xs" id="totMpSales">0</td>
-      <td class="px-2 py-3 text-right text-xs" id="totMpTrx">0</td>
-      <td class="px-4 py-3 text-slate-400 text-xs text-center font-normal italic">Uneditable</td>
-  `;
-  inputTbody.appendChild(totalRow);
-
-  BRANDS.forEach((b) => {
-    // Add option to Dropdown
-    const opt = document.createElement("option");
-    opt.value = b.code;
-    opt.textContent = b.name;
-    filterSelect.appendChild(opt);
-
-    const d0 = ACTIVE_DATASET[b.code] || { web:0, web_trx:0, app:0, app_trx:0, mp:0, mp_trx:0 };
-    const d = {
-      web: d0.web || 0, web_trx: d0.web_trx || 0,
-      app: d0.app || 0, app_trx: d0.app_trx || 0,
-      mp:  d0.mp  || 0, mp_trx:  d0.mp_trx  || 0
-    };
-
-    const total = d.web + d.app + d.mp;
-    const owned = d.web + d.app;
-    const baselineOwnedShare = total ? Math.round((owned / total) * 100) : 0;
-
-    const tri = document.createElement("tr");
-    tri.className = "hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors";
-    tri.setAttribute("data-brand-code", b.code); 
-    tri.innerHTML = `
-      <td class="px-4 py-3 align-top">
-        <div class="font-bold text-slate-800 dark:text-slate-100">${b.code}</div>
-        <div class="text-[10px] text-slate-400 truncate">${b.name}</div>
-      </td>
-      <td class="px-2 py-3 text-right align-top text-slate-500">${b.shopifyPct.toFixed(2)}%</td>
-      <td class="px-2 py-3 text-right"><input data-k="web" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.web)}" /></td>
-      <td class="px-2 py-3 text-right"><input data-k="web_trx" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.web_trx)}" /></td>
-      <td class="px-2 py-3 text-right"><input data-k="app" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.app)}" /></td>
-      <td class="px-2 py-3 text-right"><input data-k="app_trx" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.app_trx)}" /></td>
-      <td class="px-2 py-3 text-right"><input data-k="mp" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.mp)}" /></td>
-      <td class="px-2 py-3 text-right"><input data-k="mp_trx" inputmode="numeric" class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-right text-xs focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950" value="${fmtNumber(d.mp_trx)}" /></td>
-      <td class="px-4 py-3 align-middle">
-        <div class="flex items-center gap-2">
-          <div class="text-[9px] text-slate-400 w-16">100% Web</div>
-          <div class="flex items-center gap-2 flex-1">
-            <input data-k="ownedshare" type="range" min="0" max="100" value="${baselineOwnedShare}" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer rtl-range dark:bg-slate-800" />
-            <span data-k="ownedshareLabel" class="w-14 text-right font-bold text-indigo-600 dark:text-indigo-400">${baselineOwnedShare}% Web</span>
-          </div>
-          <div class="text-[9px] text-slate-400 w-12 text-right">0% Web</div>
-        </div>
-      </td>
-    `;
-
-    // Detailed Projection Row
-    const trr = document.createElement("tr");
-    trr.setAttribute("data-brand-code", b.code);
-    trr.innerHTML = `
-      <td class="px-4 py-3 align-top">
-        <div class="font-bold text-slate-800 dark:text-slate-100">${b.code}</div>
-        <div class="text-[10px] text-slate-400 truncate">${b.name}</div>
-      </td>
-      <td class="px-4 py-3 text-right">
-        <div class="grid grid-cols-[25px_1fr] gap-x-2 text-xs leading-5">
-           <span class="text-slate-400 text-left">Web</span> <span class="font-medium text-slate-700 dark:text-slate-200" data-k="pweb">—</span>
-           <span class="text-slate-400 text-left">App</span> <span class="font-medium text-slate-700 dark:text-slate-200" data-k="papp">—</span>
-           <span class="text-slate-400 text-left">MP</span>  <span class="font-medium text-slate-700 dark:text-slate-200" data-k="pmp">—</span>
-        </div>
-      </td>
-      <td class="px-4 py-3 text-right">
-        <div class="grid grid-cols-[25px_1fr] gap-x-2 text-xs leading-5">
-           <span class="text-slate-400 text-left">Web</span> <span class="font-medium" data-k="ptweb">—</span>
-           <span class="text-slate-400 text-left">App</span> <span class="font-medium" data-k="ptapp">—</span>
-           <span class="text-slate-400 text-left">MP</span>  <span class="font-medium" data-k="ptmp">—</span>
-        </div>
-      </td>
-      <td class="px-4 py-3 text-right text-slate-500" data-k="base">—</td>
-      <td class="px-4 py-3 text-right font-medium text-slate-900 dark:text-white" data-k="proj">—</td>
-      <td class="px-4 py-3 text-right font-medium" data-k="delta">—</td>
-      <td class="px-4 py-3 text-right font-bold" data-k="deltapct">—</td>
-    `;
-
-    inputTbody.appendChild(tri);
-    resultTbody.appendChild(trr);
-
-    const fmtInputs = [tri.querySelector('[data-k="web"]'), tri.querySelector('[data-k="web_trx"]'), tri.querySelector('[data-k="app"]'), tri.querySelector('[data-k="app_trx"]'), tri.querySelector('[data-k="mp"]'), tri.querySelector('[data-k="mp_trx"]')];
-    fmtInputs.forEach(attachNumberFormatting);
-    const shareInput = tri.querySelector('[data-k="ownedshare"]');
-    const shareLabel = tri.querySelector('[data-k="ownedshareLabel"]');
-    shareInput.addEventListener("input", () => { shareLabel.textContent = `${shareInput.value}% Web`; recalc(); });
-    function snapShareToBaseline() {
-      const w = parseNumber(tri.querySelector('[data-k="web"]').value);
-      const a = parseNumber(tri.querySelector('[data-k="app"]').value);
-      const m = parseNumber(tri.querySelector('[data-k="mp"]').value);
-      const t = w + a + m;
-      const baseline = t ? Math.round(((w+a)/t)*100) : 0;
-      shareInput.value = String(baseline);
-      shareLabel.textContent = `${baseline}% Web`;
-    }
-    fmtInputs.forEach(inp => inp.addEventListener("input", () => { snapShareToBaseline(); recalc(); }));
-    tri.__resultRow = trr;
-    tri.__brandMeta = b;
-  });
-
-  // Re-attach filter listener after rebuild
-  el("summaryFilter").addEventListener("change", recalc);
-}
-
-/* -----------------------------
-   CHART Config with DataLabels (Updated Logic)
------------------------------ */
-const barChart = new Chart(el("barChart"), {
-  type: "bar",
-  data: {
-    labels: ["Baseline Fee", "Variance", "Projected Fee"],
-    datasets: [{
-      label: "Fee",
-      data: [0, [0,0], 0],
-      backgroundColor: ["#94a3b8", "#10b981", "#3b82f6"],
-      borderRadius: 6,
-      barPercentage: 0.6
-    }]
+// Executive summaries per brand - factual, no reasons
+const EXEC_SUMMARY={
+  '__group__':{
+    title:'Modinity Group Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>Modinity Group's combined Ramadan 2026 sales (Day 1–17) reached <strong>IDR 146.2B</strong>, up <strong>+26%</strong> vs. 2025's IDR 116.0B over the same period. The 2025 full Ramadan (31 days) closed at IDR 196.4B.</p>
+<p>Event revenue across all brands — from MRF, SMB, and Gema Ramadan — totalled <strong>IDR 62.7B</strong>, representing <strong>43%</strong> of total Group D1–17 sales. Non-event channels contributed IDR 83.5B through Day 17.</p>
+<p><strong>Buttonscarves</strong> remains the dominant brand at 68% of Group revenue (IDR 99.8B). <strong>ZytaDelia</strong> recorded the strongest YoY growth at +99%. <strong>TYGA</strong>, launching its first Ramadan cycle, contributed IDR 112M through organic channels only.</p>
+<p>On current run rate (IDR 8.6B/day average), the Group is projected to close full Ramadan 2026 at <strong>IDR 258.0B</strong> — a <strong>+31%</strong> increase vs. the 2025 full Ramadan total.</p>`
   },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: { padding: { top: 30, bottom: 5, left: 0, right: 0 } }, 
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => {
-             if (ctx.dataIndex === 1) {
-                const base = ctx.chart.data.datasets[0].data[0][1];
-                const proj = ctx.chart.data.datasets[0].data[2][1];
-                return "Diff: " + fmtIDR(proj - base);
-             }
-             return fmtIDR(Array.isArray(ctx.raw) ? ctx.raw[1] : ctx.raw);
-          }
-        }
-      },
-      datalabels: {
-        anchor: (ctx) => {
-          if (ctx.dataIndex !== 1) return 'center'; 
-          const ds = ctx.chart.data.datasets[0].data;
-          const base = ds[0][1];
-          const proj = ds[2][1];
-          const diffPct = Math.abs((proj - base) / base);
-          return (diffPct <= 0.20) ? 'end' : 'center';
-        },
-        align: (ctx) => {
-          if (ctx.dataIndex !== 1) return 'center';
-          const ds = ctx.chart.data.datasets[0].data;
-          const base = ds[0][1];
-          const proj = ds[2][1];
-          const diffPct = Math.abs((proj - base) / base);
-          return (diffPct <= 0.20) ? 'end' : 'center';
-        },
-        color: (ctx) => {
-           const dark = document.documentElement.classList.contains("dark");
-           if (ctx.dataIndex !== 1) return 'white';
-           const ds = ctx.chart.data.datasets[0].data;
-           const base = ds[0][1];
-           const proj = ds[2][1];
-           const diffPct = Math.abs((proj - base) / base);
-           // When variance is small we place label near the end; use a theme-aware dark/light text.
-           if (diffPct <= 0.20) return dark ? '#e2e8f0' : '#334155';
-           return 'white';
-        },
-        font: { weight: 'bold', size: 10, family: 'sans-serif' },
-        textAlign: 'center',
-        clip: false,
-        formatter: (value, ctx) => {
-          const idx = ctx.dataIndex;
-          const ds = ctx.chart.data.datasets[0].data;
-          const baseVal = ds[0][1];
-
-          let val = 0;
-          if (idx === 1) {
-            const projVal = ds[2][1];
-            val = projVal - baseVal;
-          } else if (Array.isArray(value)) {
-            val = value[1];
-          } else {
-            val = value;
-          }
-
-          const valStr = fmtCompact(val);
-          if (idx === 0) return valStr;
-
-          const delta = (idx === 1) ? val : (val - baseVal);
-          const pct = baseVal ? (delta / baseVal * 100) : 0;
-          const pctStr = fmtDeltaPct(pct);
-
-          return `${valStr}\n(${pctStr})`;
-        }
-      }
-    },
-    scales: {
-      y: { ticks: { callback: (v) => fmtCompact(v), font: {size: 10} }, grid: { color: '#f1f5f9' }, border: {display: false} },
-      x: { grid: { display: false }, border: {display: false}, ticks: { font: {weight: 'bold'} } }
-    }
+  'Buttonscarves':{
+    title:'Buttonscarves Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>Buttonscarves' Ramadan 2026 (Day 1–17) reached <strong>IDR 99.8B</strong>, up <strong>+26%</strong> vs. 2025's IDR 79.0B over the same period. The 2025 full Ramadan closed at IDR 126.3B.</p>
+<p>Growth was driven by offline events. MRF (Days 1–4, 19–22 Feb) contributed <strong>IDR 41.3B</strong> — 41% of total D1–17 sales in just four days. SMB (Days 7–10, 25–28 Feb) added <strong>IDR 5.9B</strong>. Gema Ramadan (Days 16–17) contributed <strong>IDR 2.7B</strong>. Combined event revenue totalled IDR 51.2B — <strong>51%</strong> of total Ramadan sales through Day 17.</p>
+<p>Non-event channels totalled IDR 48.6B through Day 17. Among channels, Marketplace declined −46% overall but recovered strongly from Day 13 onward. Own Store and Franchise recorded consistent underperformance vs. 2025 throughout the period. Website recorded the smallest decline among non-event channels at −29%.</p>
+<p>On current run rate, Buttonscarves is projected to close full Ramadan 2026 at <strong>IDR 176.1B</strong> — a <strong>+39%</strong> increase vs. 2025's IDR 126.3B full Ramadan total.</p>`
+  },
+  'Benang Jarum':{
+    title:'Benang Jarum Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>Benang Jarum's Ramadan 2026 (Day 1–17) reached <strong>IDR 17.7B</strong>, up <strong>+19%</strong> vs. 2025's IDR 14.9B over the same period. The 2025 full Ramadan closed at IDR 28.7B.</p>
+<p>Event revenue (MRF, SMB, Gema Ramadan) totalled <strong>IDR 2.7B</strong> — <strong>15%</strong> of total D1–17 sales. MRF contributed IDR 1.1B, SMB added IDR 0.8B, and Gema Ramadan IDR 0.5B. Non-event channels contributed IDR 15.1B through Day 17.</p>
+<p>The inter-event trough (Days 5–6) saw total sales decline −21% vs. 2025. Post-SMB (Days 11–15) recorded a −11% decline. Gema Ramadan days (Days 16–17) closed strongly at +60% vs. 2025, with non-event growth of +42%.</p>
+<p>On current run rate, Benang Jarum is projected to close full Ramadan 2026 at <strong>IDR 31.3B</strong> — a <strong>+9%</strong> increase vs. 2025's IDR 28.7B full Ramadan total.</p>`
+  },
+  'Buttonscarves Beauty':{
+    title:'Buttonscarves Beauty Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>Buttonscarves Beauty's Ramadan 2026 (Day 1–17) reached <strong>IDR 4.9B</strong>, up <strong>+19%</strong> vs. 2025's IDR 4.1B over the same period. The 2025 full Ramadan closed at IDR 9.0B.</p>
+<p>Event revenue totalled <strong>IDR 2.2B</strong> — <strong>45%</strong> of total D1–17 sales. MRF (Days 1–4) contributed IDR 1.4B and SMB (Days 7–10) IDR 0.8B. Gema Ramadan contributed IDR 47M. Non-event revenue stood at IDR 2.7B through Day 17.</p>
+<p>Post-SMB non-event channels (Days 11–15) declined −28% vs. 2025, and Gema Ramadan days (Days 16–17) recorded −19% non-event growth. Total sales in the Post-SMB phase were −43% vs. 2025.</p>
+<p>On current run rate, BS Beauty is projected to close full Ramadan 2026 at <strong>IDR 8.6B</strong> — approximately at par with 2025's IDR 9.0B full Ramadan total (−4%).</p>`
+  },
+  'ZytaDelia':{
+    title:'ZytaDelia Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>ZytaDelia's Ramadan 2026 (Day 1–17) reached <strong>IDR 8.2B</strong>, up <strong>+99%</strong> vs. 2025's IDR 4.1B over the same period. The 2025 full Ramadan closed at IDR 7.1B.</p>
+<p>Event revenue totalled <strong>IDR 4.2B</strong> — <strong>51%</strong> of total D1–17 sales. MRF contributed IDR 2.8B, SMB IDR 1.0B, and Gema Ramadan IDR 0.3B. Non-event channels contributed IDR 4.0B through Day 17.</p>
+<p>The Post-SMB phase (Days 11–15) recorded non-event growth of +100% vs. 2025 on a like-for-like basis. ZytaDelia has already exceeded its full 2025 Ramadan total (IDR 7.1B) through Day 17 alone.</p>
+<p>On current run rate, ZytaDelia is projected to close full Ramadan 2026 at <strong>IDR 14.4B</strong> — a <strong>+103%</strong> increase vs. 2025's full Ramadan total.</p>`
+  },
+  'Nada Puspita':{
+    title:'Nada Puspita Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>Nada Puspita's Ramadan 2026 (Day 1–17) reached <strong>IDR 15.0B</strong>, up <strong>+10%</strong> vs. 2025's IDR 13.6B over the same period. The 2025 full Ramadan closed at IDR 24.9B.</p>
+<p>Event revenue (MRF, SMB, Gema Ramadan) totalled <strong>IDR 2.4B</strong> — <strong>16%</strong> of total D1–17 sales. MRF contributed IDR 1.7B, SMB IDR 0.5B, and Gema Ramadan IDR 0.3B. Non-event channels contributed IDR 12.6B through Day 17.</p>
+<p>The MRF phase (Days 1–4) recorded total growth of +172% with non-event channels up +39%. The inter-event trough (Days 5–6) held at +8% total. SMB and post-SMB phases showed total declines of −8% and −7% respectively, with non-event channels declining −20% and −1%.</p>
+<p>On current run rate, Nada Puspita is projected to close full Ramadan 2026 at <strong>IDR 26.5B</strong> — a <strong>+6%</strong> increase vs. 2025's IDR 24.9B full Ramadan total.</p>`
+  },
+  'Calla The Label':{
+    title:'Calla The Label Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>Calla The Label's Ramadan 2026 (Day 1–17) reached <strong>IDR 524M</strong>, up <strong>+63%</strong> vs. 2025's IDR 321M over the same period. The 2025 full Ramadan closed at IDR 490M.</p>
+<p>Calla participated in MRF (Days 1–4), with event revenue of <strong>IDR 62M</strong> — <strong>12%</strong> of total D1–17 sales. Calla did not participate in SMB or Gema Ramadan. Non-event channels contributed IDR 430M through Day 17, up significantly vs. 2025.</p>
+<p>Calla has already exceeded its full 2025 Ramadan total (IDR 490M) through Day 17 alone. On current run rate, Calla is projected to close full Ramadan 2026 at <strong>IDR 914M</strong> — an <strong>+87%</strong> increase vs. 2025's full Ramadan total.</p>`
+  },
+  'TYGA':{
+    title:'TYGA Ramadan 2026 — Day 1–17 Summary',
+    body:`<p>TYGA is entering its first full Ramadan cycle in 2026, having launched ~July 2025. Through Day 17 (19 Feb – 7 Mar), the brand reached <strong>IDR 112M</strong> in total sales. There is no 2025 Ramadan benchmark for comparison.</p>
+<p>TYGA did not participate in MRF, SMB, or Gema Ramadan. All revenue through Day 17 was generated through organic channels. The brand's strongest single day was Day 17 at IDR 14M.</p>
+<p>On current run rate (IDR 6.6M/day average), TYGA is projected to close full Ramadan 2026 at <strong>IDR 198M</strong>. Last-5-days average of IDR 10.3M/day would project to <strong>IDR 245M</strong>.</p>`
   }
+};
+
+// Phase definitions per brand
+const PHASES={
+  '__group__':[
+    {name:'MRF Pre-Event',days:'Day 1',dates:'19 Feb',cls:'mrf-row',total:'+8%',ne:'−62%',ev:'IDR 1.3B'},
+    {name:'MRF Peak',days:'Days 2–4',dates:'20–22 Feb',cls:'mrf-row',total:'+170%',ne:'−59%',ev:'IDR 55.2B'},
+    {name:'Inter-Event Trough',days:'Days 5–6',dates:'23–24 Feb',cls:'trough-row',total:'−43%',ne:'−53%',ev:'IDR 1.5B'},
+    {name:'SMB',days:'Days 7–10',dates:'25–28 Feb',cls:'smb-row',total:'−4%',ne:'−30%',ev:'IDR 7.5B'},
+    {name:'Post-SMB',days:'Days 11–15',dates:'1–5 Mar',cls:'post-row',total:'−14%',ne:'−3%',ev:'IDR 0.4B'},
+    {name:'Gema Ramadan',days:'Days 16–17',dates:'6–7 Mar',cls:'gema-row',total:'+59%',ne:'+28%',ev:'IDR 3.8B'},
+  ],
+  'Buttonscarves':[
+    {name:'MRF Pre-Event',days:'Day 1',dates:'19 Feb',cls:'mrf-row',total:'−76%',ne:'−89%',ev:'IDR 1.0B'},
+    {name:'MRF Peak',days:'Days 2–4',dates:'20–22 Feb',cls:'mrf-row',total:'+287%',ne:'−61%',ev:'IDR 40.2B'},
+    {name:'Inter-Event Trough',days:'Days 5–6',dates:'23–24 Feb',cls:'trough-row',total:'−51%',ne:'−67%',ev:'IDR 1.3B'},
+    {name:'SMB',days:'Days 7–10',dates:'25–28 Feb',cls:'smb-row',total:'−22%',ne:'−53%',ev:'IDR 5.9B'},
+    {name:'Post-SMB',days:'Days 11–15',dates:'1–5 Mar',cls:'post-row',total:'−20%',ne:'−4%',ev:'IDR 0.0B'},
+    {name:'Gema Ramadan',days:'Days 16–17',dates:'6–7 Mar',cls:'gema-row',total:'+79%',ne:'+59%',ev:'IDR 2.7B'},
+  ],
+  'Benang Jarum':[
+    {name:'MRF Pre-Event',days:'Day 1',dates:'19 Feb',cls:'mrf-row',total:'+117%',ne:'+99%',ev:'IDR 0.1B'},
+    {name:'MRF Peak',days:'Days 2–4',dates:'20–22 Feb',cls:'mrf-row',total:'+23%',ne:'−15%',ev:'IDR 1.0B'},
+    {name:'Inter-Event Trough',days:'Days 5–6',dates:'23–24 Feb',cls:'trough-row',total:'−21%',ne:'−25%',ev:'IDR 0.0B'},
+    {name:'SMB',days:'Days 7–10',dates:'25–28 Feb',cls:'smb-row',total:'+28%',ne:'+3%',ev:'IDR 0.8B'},
+    {name:'Post-SMB',days:'Days 11–15',dates:'1–5 Mar',cls:'post-row',total:'−11%',ne:'−10%',ev:'IDR 0.3B'},
+    {name:'Gema Ramadan',days:'Days 16–17',dates:'6–7 Mar',cls:'gema-row',total:'+60%',ne:'+42%',ev:'IDR 0.5B'},
+  ],
+  'Buttonscarves Beauty':[
+    {name:'MRF Pre-Event',days:'Day 1',dates:'19 Feb',cls:'mrf-row',total:'−52%',ne:'−62%',ev:'IDR 0.01B'},
+    {name:'MRF Peak',days:'Days 2–4',dates:'20–22 Feb',cls:'mrf-row',total:'+213%',ne:'−45%',ev:'IDR 1.3B'},
+    {name:'Inter-Event Trough',days:'Days 5–6',dates:'23–24 Feb',cls:'trough-row',total:'−42%',ne:'−42%',ev:'—'},
+    {name:'SMB',days:'Days 7–10',dates:'25–28 Feb',cls:'smb-row',total:'+162%',ne:'+17%',ev:'IDR 0.8B'},
+    {name:'Post-SMB',days:'Days 11–15',dates:'1–5 Mar',cls:'post-row',total:'−43%',ne:'−28%',ev:'—'},
+    {name:'Gema Ramadan',days:'Days 16–17',dates:'6–7 Mar',cls:'gema-row',total:'−23%',ne:'−19%',ev:'IDR 0.05B'},
+  ],
+  'ZytaDelia':[
+    {name:'MRF Pre-Event',days:'Day 1',dates:'19 Feb',cls:'mrf-row',total:'−11%',ne:'−17%',ev:'IDR 0.01B'},
+    {name:'MRF Peak',days:'Days 2–4',dates:'20–22 Feb',cls:'mrf-row',total:'+218%',ne:'−51%',ev:'IDR 2.8B'},
+    {name:'Inter-Event Trough',days:'Days 5–6',dates:'23–24 Feb',cls:'trough-row',total:'−18%',ne:'−44%',ev:'IDR 0.1B'},
+    {name:'SMB',days:'Days 7–10',dates:'25–28 Feb',cls:'smb-row',total:'+199%',ne:'+42%',ev:'IDR 1.0B'},
+    {name:'Post-SMB',days:'Days 11–15',dates:'1–5 Mar',cls:'post-row',total:'+31%',ne:'+100%',ev:'—'},
+    {name:'Gema Ramadan',days:'Days 16–17',dates:'6–7 Mar',cls:'gema-row',total:'+31%',ne:'0%',ev:'IDR 0.3B'},
+  ],
+  'Nada Puspita':[
+    {name:'MRF Pre-Event',days:'Day 1',dates:'19 Feb',cls:'mrf-row',total:'+35%',ne:'+5%',ev:'IDR 0.1B'},
+    {name:'MRF Peak',days:'Days 2–4',dates:'20–22 Feb',cls:'mrf-row',total:'+172%',ne:'+39%',ev:'IDR 1.6B'},
+    {name:'Inter-Event Trough',days:'Days 5–6',dates:'23–24 Feb',cls:'trough-row',total:'+8%',ne:'+3%',ev:'IDR 0.0B'},
+    {name:'SMB',days:'Days 7–10',dates:'25–28 Feb',cls:'smb-row',total:'−8%',ne:'−20%',ev:'IDR 0.5B'},
+    {name:'Post-SMB',days:'Days 11–15',dates:'1–5 Mar',cls:'post-row',total:'−7%',ne:'−1%',ev:'—'},
+    {name:'Gema Ramadan',days:'Days 16–17',dates:'6–7 Mar',cls:'gema-row',total:'−5%',ne:'−14%',ev:'IDR 0.3B'},
+  ],
+  'Calla The Label':[
+    {name:'MRF Pre-Event',days:'Day 1',dates:'19 Feb',cls:'mrf-row',total:'+358%',ne:'+284%',ev:'IDR 0.003B'},
+    {name:'MRF Peak',days:'Days 2–4',dates:'20–22 Feb',cls:'mrf-row',total:'+677%',ne:'+320%',ev:'IDR 0.06B'},
+    {name:'Post-MRF',days:'Days 5–15',dates:'23 Feb–5 Mar',cls:'post-row',total:'+75%',ne:'+75%',ev:'—'},
+  ],
+  'TYGA':[
+    {name:'Full Period',days:'Days 1–17',dates:'19 Feb–7 Mar',cls:'post-row',total:'New Brand',ne:'All organic',ev:'—'},
+  ],
+};
+
+const DATES_25=['Mar 1','Mar 2','Mar 3','Mar 4','Mar 5','Mar 6','Mar 7','Mar 8','Mar 9','Mar 10','Mar 11','Mar 12','Mar 13','Mar 14','Mar 15','Mar 16','Mar 17'];
+const DATES_26=['Feb 19','Feb 20','Feb 21','Feb 22','Feb 23','Feb 24','Feb 25','Feb 26','Feb 27','Feb 28','Mar 1','Mar 2','Mar 3','Mar 4','Mar 5','Mar 6','Mar 7'];
+const EV_LBL={0:'MRF Pre',1:'MRF D1',2:'MRF D2',3:'MRF D3',6:'SMB D1',7:'SMB D2',8:'SMB D3',9:'SMB D4',15:'Gema D1',16:'Gema D2'};
+const EV_CLS={0:'mrf',1:'mrf',2:'mrf',3:'mrf',6:'smb',7:'smb',8:'smb',9:'smb',15:'gema',16:'gema'};
+
+const acharts={}, rendered=new Set();
+
+const B=v=>(v/1e9).toFixed(2);
+const fmt=v=>Math.abs(v)>=1e9?(v/1e9).toFixed(2)+'B':Math.abs(v)>=1e6?(v/1e6).toFixed(0)+'M':v.toFixed(0);
+const fmtFull=v=>Math.round(v).toLocaleString('en-US'); // full IDR with commas
+const fmtM=v=>(v/1e6).toFixed(1); // in millions
+const pct=(a,b)=>a?Math.round((b-a)/a*100):null;
+const sign=v=>v>=0?'+':'';
+const DL17=Array.from({length:17},(_,i)=>`D${i+1}`);
+const DL31=Array.from({length:31},(_,i)=>`D${i+1}`);
+
+function destroyC(id){if(acharts[id]){acharts[id].destroy();delete acharts[id];}}
+const baseO=(small=false)=>({
+  responsive:true,maintainAspectRatio:false,
+  interaction:{mode:'index',intersect:false},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a2e',titleColor:'#e2e8f0',bodyColor:'#a0aec0',padding:9,cornerRadius:5,
+    callbacks:{label:c=>` ${c.dataset.label}: IDR ${(c.parsed.y||0).toFixed(2)}B`}}},
+  scales:{x:{grid:{color:'#f1f5f9'},ticks:{color:'#94a3b8',maxRotation:0,font:{size:small?9:10}}},
+          y:{grid:{color:'#f1f5f9'},ticks:{color:'#94a3b8',callback:v=>`${v.toFixed(1)}B`,font:{size:small?9:10}}}}
 });
-
-/* -----------------------------
-   Chart Theme (Light/Dark)
------------------------------ */
-function applyChartTheme() {
-  const dark = document.documentElement.classList.contains("dark");
-
-  // Improve readability in dark mode: ticks, grid, tooltip colors.
-  const tickColor = dark ? "#cbd5e1" : "#334155";      // slate-300 / slate-700
-  const gridColor = dark ? "rgba(148,163,184,0.18)" : "#f1f5f9"; // subtle in dark
-  const tooltipBg = dark ? "rgba(2,6,23,0.92)" : "rgba(255,255,255,0.95)";
-  const tooltipBorder = dark ? "rgba(148,163,184,0.25)" : "rgba(148,163,184,0.35)";
-  const tooltipText = dark ? "#e2e8f0" : "#0f172a";
-
-  barChart.options.scales.y.ticks.color = tickColor;
-  barChart.options.scales.x.ticks.color = tickColor;
-  barChart.options.scales.y.grid.color = gridColor;
-
-  barChart.options.plugins.tooltip.backgroundColor = tooltipBg;
-  barChart.options.plugins.tooltip.borderColor = tooltipBorder;
-  barChart.options.plugins.tooltip.borderWidth = 1;
-  barChart.options.plugins.tooltip.titleColor = tooltipText;
-  barChart.options.plugins.tooltip.bodyColor = tooltipText;
-
-  barChart.update();
+function mkLine(id,datasets,labels,small=false){
+  destroyC(id);const ctx=document.getElementById(id);if(!ctx)return;
+  acharts[id]=new Chart(ctx,{type:'line',data:{labels,datasets},options:baseO(small)});
+}
+function mkBar(id,datasets,labels,stacked=false){
+  destroyC(id);const ctx=document.getElementById(id);if(!ctx)return;
+  const o={...baseO(),plugins:{...baseO().plugins,legend:{display:false}},
+    scales:{x:{...baseO().scales.x,stacked},y:{...baseO().scales.y,stacked}}};
+  acharts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:o});
+}
+function ds(label,vals,color,dashed=false,fill=false){
+  return{label,data:vals.map(v=>v/1e9),borderColor:color,backgroundColor:fill?color+'18':'transparent',
+    fill,borderWidth:dashed?1.5:2,borderDash:dashed?[5,4]:[],
+    pointRadius:3,pointHoverRadius:5,pointBackgroundColor:color,tension:0.3};
 }
 
+// TIMELINE
+function buildTL(bk){
+  const ev=EV[bk]||{};
+  const bgs=Array(17).fill('#f8fafc'),fgs=Array(17).fill('var(--light)'),txts=Array(17).fill('');
+  if(ev.mrf){bgs[0]='#fef3c7';fgs[0]='#92400e';txts[0]='pre';[1,2,3].forEach(i=>{bgs[i]='#f59e0b';fgs[i]='#fff';txts[i]='MRF';});}
+  if(ev.smb){[6,7,8,9].forEach(i=>{bgs[i]='#3b82f6';fgs[i]='#fff';txts[i]='SMB';});}
+  if(ev.gema){bgs[15]='#10b981';fgs[15]='#fff';txts[15]='GR1';bgs[16]='#34d399';fgs[16]='#065f46';txts[16]='GR2';}
+  const numR=Array(17).fill(0).map((_,i)=>`<div class="tl-cell" style="font-size:10px;font-weight:700;color:${fgs[i]};">${i+1}</div>`).join('');
+  const evR=Array(17).fill(0).map((_,i)=>`<div class="tl-cell" style="background:${bgs[i]};color:${fgs[i]};">${txts[i]}</div>`).join('');
+  let leg='';
+  if(ev.mrf) leg+=`<div class="tl-li"><div class="tl-dot" style="background:#f59e0b;"></div><span style="font-size:11px;font-weight:600;color:#92400e;">MRF</span><span style="font-size:10px;color:var(--muted);margin-left:4px;">Days 1–4 · 19–22 Feb · 72 hrs</span></div>`;
+  if(ev.smb) leg+=`<div class="tl-li"><div class="tl-dot" style="background:#3b82f6;"></div><span style="font-size:11px;font-weight:600;color:#1e40af;">SMB</span><span style="font-size:10px;color:var(--muted);margin-left:4px;">Days 7–10 · 25–28 Feb</span></div>`;
+  if(ev.gema) leg+=`<div class="tl-li"><div class="tl-dot" style="background:#10b981;"></div><span style="font-size:11px;font-weight:600;color:#065f46;">Gema Ramadan</span><span style="font-size:10px;color:var(--muted);margin-left:4px;">Days 16–17 · 6–7 Mar</span></div>`;
+  if(!ev.mrf&&!ev.smb&&!ev.gema) leg=`<span style="font-size:11px;color:var(--muted);">TYGA did not participate in any group events during Ramadan 2026.</span>`;
+  return `<div class="tl-wrap">
+    <div class="tl-row" style="height:20px;margin-bottom:3px;"><div class="tl-lbl"></div><div class="tl-cells">${numR}</div></div>
+    <div class="tl-row" style="height:26px;"><div class="tl-lbl" style="font-size:9px;">Event</div><div class="tl-cells">${evR}</div></div>
+    <div class="tl-leg">${leg}</div>
+  </div>`;
+}
 
-/* -----------------------------
-   Recalc
------------------------------ */
-function recalc() {
-  const mpPct = parseNumber(el("mpFeePct").value);       
-  const mpPctProj = parseNumber(el("mpFeePctProj").value); 
-  const tapcartPct = parseNumber(el("tapcartPct").value);
-  const midtransPerTrx = parseNumber(el("midtransPerTrx").value);
-  const fsEligiblePct = parseNumber(el("fsEligiblePct").value);
-  const fsAvgSubsidy = parseNumber(el("fsAvgSubsidy").value);
-  const growthPct = getGrowthValue();
+// PHASE TABLE
+function buildPhases(bk){
+  const phases=PHASES[bk]||[];
+  if(!phases.length) return '';
+  const rows=phases.map(p=>{
+    const tc=p.total.startsWith('+')&&!p.total.includes('New')?'pos':p.total.startsWith('−')?'neg':'na';
+    const nc=p.ne.startsWith('+')&&p.ne!=='All organic'?'pos':p.ne.startsWith('−')?'neg':'na';
+    return `<div class="phase-row ${p.cls}">
+      <div class="pc"><div><div class="ph-name">${p.name}</div><div class="ph-dates">${p.dates}</div></div></div>
+      <div class="pc" style="color:var(--muted);font-size:11px;">${p.days}</div>
+      <div class="pc" style="color:var(--muted);font-size:11px;">${p.ev}</div>
+      <div class="pc ${tc}">${p.total}</div>
+      <div class="pc ${nc}">${p.ne}</div>
+    </div>`;
+  }).join('');
+  return `<div class="phases" style="margin-top:18px;">
+    <div class="phase-row hdr">
+      <div class="pc">Phase</div>
+      <div class="pc">Days</div>
+      <div class="pc">Event Revenue</div>
+      <div class="pc">Total Growth</div>
+      <div class="pc">Non-Event Growth</div>
+    </div>
+    ${rows}
+  </div>`;
+}
 
-  // Filter selection
-  const filterBrand = el("summaryFilter").value; 
-
-  // Variables for Summary
-  let sumBaseFee = 0, sumProjFee = 0;
-  let sumProjFeeOwned = 0, sumProjFeeMp = 0;
-  let sumSalesAll = 0, sumOwnedSales = 0, sumMpSales = 0;
-  let sumBaseOwnedSales = 0, sumBaseMpSales = 0;
-
-  // Variables for Input Totals (Always All)
-  let totInWeb=0, totInWebTrx=0, totInApp=0, totInAppTrx=0, totInMp=0, totInMpTrx=0;
-
-  const inputRows = Array.from(el("inputRows").children).slice(1); 
-
-  inputRows.forEach((tri) => {
-    const trr = tri.__resultRow;
-    const b = tri.__brandMeta;
-    
-    // Read values
-    const web = parseNumber(tri.querySelector('[data-k="web"]').value);
-    const web_trx = parseNumber(tri.querySelector('[data-k="web_trx"]').value);
-    const app = parseNumber(tri.querySelector('[data-k="app"]').value);
-    const app_trx = parseNumber(tri.querySelector('[data-k="app_trx"]').value);
-    const mp = parseNumber(tri.querySelector('[data-k="mp"]').value);
-    const mp_trx = parseNumber(tri.querySelector('[data-k="mp_trx"]').value);
-    const ownedSharePct = parseNumber(tri.querySelector('[data-k="ownedshare"]').value);
-
-    // Accumulate Inputs Total (Always for all brands)
-    totInWeb += web; totInWebTrx += web_trx;
-    totInApp += app; totInAppTrx += app_trx;
-    totInMp += mp;   totInMpTrx += mp_trx;
-
-    const r = calcBrand({
-      web, web_trx, app, app_trx, mp, mp_trx,
-      shopifyPct: b.shopifyPct, mpPct, mpPctProj, tapcartPct, midtransPerTrx, fsEligiblePct, fsAvgSubsidy, ownedSharePct,
-      growthPct // Pass growth
-    });
-
-    // Update Detailed Row
-    trr.querySelector('[data-k="pweb"]').textContent = fmtIDR(r.webP);
-    trr.querySelector('[data-k="papp"]').textContent = fmtIDR(r.appP);
-    trr.querySelector('[data-k="pmp"]').textContent  = fmtIDR(r.mpP);
-    
-    trr.querySelector('[data-k="ptweb"]').textContent = fmtNumber(r.webTrxP);
-    trr.querySelector('[data-k="ptapp"]').textContent = fmtNumber(r.appTrxP);
-    trr.querySelector('[data-k="ptmp"]').textContent  = fmtNumber(r.mpTrxP);
-    trr.querySelector('[data-k="base"]').textContent = fmtIDR(r.baseFee);
-    trr.querySelector('[data-k="proj"]').textContent = fmtIDR(r.projFee);
-    trr.querySelector('[data-k="delta"]').textContent = fmtIDR(r.delta);
-    
-    const dpEl = trr.querySelector('[data-k="deltapct"]');
-    dpEl.textContent = fmtDeltaPct(r.deltaPct);
-    dpEl.className = "px-4 py-3 text-right font-bold " + (r.delta <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400");
-
-    // Conditionally Add to Summary
-    if (filterBrand === 'ALL' || filterBrand === b.code) {
-      sumBaseFee += r.baseFee;
-      sumProjFee += r.projFee;
-      sumProjFeeOwned += r.projFeeOwned;
-      sumProjFeeMp += r.projFeeMp;
-      sumSalesAll += r.totalSales;
-      sumOwnedSales += (r.webP + r.appP);
-      sumMpSales += r.mpP;
-      
-      sumBaseOwnedSales += r.baseOwned;
-      sumBaseMpSales += r.baseMp;
-    }
-  });
-
-  // Update Input Totals Row
-  el("totWebSales").textContent = fmtNumber(totInWeb);
-  el("totWebTrx").textContent = fmtNumber(totInWebTrx);
-  el("totAppSales").textContent = fmtNumber(totInApp);
-  el("totAppTrx").textContent = fmtNumber(totInAppTrx);
-  el("totMpSales").textContent = fmtNumber(totInMp);
-  el("totMpTrx").textContent = fmtNumber(totInMpTrx);
-
-  // Update Summary Cards
-  const delta = sumProjFee - sumBaseFee;
-  const deltaPct = sumBaseFee ? (delta / sumBaseFee) * 100 : 0;
-
-  el("overallBase").textContent = fmtIDR(sumBaseFee);
-  el("overallProj").textContent = fmtIDR(sumProjFee);
-  el("overallDelta").textContent = fmtIDR(delta);
-  el("overallDeltaPct").textContent = `${fmtDeltaPct(deltaPct)} vs baseline fee`;
-  el("sumTotalSales").textContent = fmtIDR(sumSalesAll);
-
-  const ownedShare = sumSalesAll ? (sumOwnedSales / sumSalesAll) * 100 : 0;
-  el("sumOwnedShare").textContent = `${ownedShare.toFixed(1)}%`;
-  el("sumMpShare").textContent = `${(100-ownedShare).toFixed(1)}%`;
-  
-  el("sumProjOwnedSales").textContent = fmtIDR(sumOwnedSales);
-  el("sumProjMpSales").textContent = fmtIDR(sumMpSales);
-  
-  const ownedFeePct = sumOwnedSales ? (sumProjFeeOwned / sumOwnedSales) * 100 : 0;
-  el("sumProjOwnedFee").textContent = `${fmtCompact(sumProjFeeOwned)} (${ownedFeePct.toFixed(1)}%)`;
-
-  const mpFeePct = sumMpSales ? (sumProjFeeMp / sumMpSales) * 100 : 0;
-  el("sumProjMpFee").textContent = `${fmtCompact(sumProjFeeMp)} (${mpFeePct.toFixed(1)}%)`;
-
-  // --- Growth vs Baseline Logic ---
-  const ownedGrowth = sumBaseOwnedSales ? ((sumOwnedSales - sumBaseOwnedSales) / sumBaseOwnedSales * 100) : 0;
-  const mpGrowth = sumBaseMpSales ? ((sumMpSales - sumBaseMpSales) / sumBaseMpSales * 100) : 0;
-
-  // Render Growth Indicators
-  const renderGrowth = (elId, val) => {
-    const elem = el(elId);
-    const sign = val >= 0 ? "+" : "";
-    const colorClass = val >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400";
-    elem.className = `text-[10px] font-bold mt-0.5 ${colorClass}`;
-    elem.textContent = `${sign}${val.toFixed(1)}% vs Baseline`;
-  };
-  renderGrowth("sumProjOwnedGrowth", ownedGrowth);
-  renderGrowth("sumProjMpGrowth", mpGrowth);
-
-
-  // Dynamic Insight
-  const datasetLabel = el("dsDay1").checked ? "Ramadan Day 1" : "Ramadan Full Month";
-  const mpShare = 100 - ownedShare;
-  const absDelta = Math.abs(delta);
-  const absDeltaPct = Math.abs(deltaPct);
-  const scopeText = (filterBrand === 'ALL') ? "our" : `${filterBrand}'s`;
-
-  let insightHTML = "";
-  if (delta <= 0) {
-     insightHTML = `If we shift ${scopeText} sales contribution to <strong class="text-slate-900 dark:text-white">${mpShare.toFixed(1)}% Marketplace</strong> and <strong class="text-slate-900 dark:text-white">${ownedShare.toFixed(1)}% Website</strong> (with ${growthPct}% growth), we will save <strong class="text-emerald-600 dark:text-emerald-400">${absDeltaPct.toFixed(1)}%</strong> of fees (equal to <strong class="text-emerald-600 dark:text-emerald-400">${fmtCompact(absDelta)}</strong>) based on ${scopeText} <strong>${datasetLabel}</strong> baseline.`;
+// CHARTS
+function renderMain(bk,mode){
+  const sk=bk.replace(/\s/g,'_');
+  const d=ALL.data[bk];
+  document.querySelectorAll(`#tgl-${sk} button`).forEach(b=>{b.style.background='var(--bg)';b.style.color='var(--muted)';});
+  const ab=document.querySelector(`#tgl-${sk} [data-m="${mode}"]`);
+  if(ab){ab.style.background='var(--ink)';ab.style.color='#fff';}
+  if(mode==='d17'){
+    mkLine(`cm-${sk}`,[ds('2025 D1-17',d['2025'].total.slice(0,17),C.gold,true),ds('2026',d['2026'].total,C.teal,false,true)],DL17);
   } else {
-     insightHTML = `If we shift ${scopeText} sales contribution to <strong class="text-slate-900 dark:text-white">${mpShare.toFixed(1)}% Marketplace</strong> and <strong class="text-slate-900 dark:text-white">${ownedShare.toFixed(1)}% Website</strong> (with ${growthPct}% growth), ${scopeText} fees will increase by <strong class="text-rose-600 dark:text-rose-400">${absDeltaPct.toFixed(1)}%</strong> (equal to <strong class="text-rose-600 dark:text-rose-400">${fmtCompact(absDelta)}</strong>) based on ${scopeText} <strong>${datasetLabel}</strong> baseline.`;
+    const pad=[...d['2026'].total,...Array(14).fill(null)];
+    mkLine(`cm-${sk}`,[ds('2025 Full',d['2025'].total,C.gold,true),{label:'2026 (D1-17)',data:pad.map(v=>v!=null?v/1e9:null),
+      borderColor:C.teal,backgroundColor:C.teal+'18',fill:true,borderWidth:2,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:C.teal,tension:0.3,spanGaps:false}],DL31);
   }
-  el("insightText").innerHTML = insightHTML;
-
-  // Chart Update
-  const varianceColor = delta <= 0 ? "#10b981" : "#ef4444"; 
-  barChart.data.datasets[0].data = [
-    [0, sumBaseFee],              
-    [sumProjFee, sumBaseFee],   
-    [0, sumProjFee]               
-  ];
-  barChart.data.datasets[0].backgroundColor = ["#94a3b8", varianceColor, "#3b82f6"];
-  barChart.update();
 }
 
-function applyGlobalShare(value) {
-  const v = String(parseNumber(value));
-  el("globalShareLabel").textContent = `${v}%`;
-  const rows = Array.from(el("inputRows").children).slice(1);
-  rows.forEach(tri => {
-    tri.querySelector('[data-k="ownedshare"]').value = v;
-    tri.querySelector('[data-k="ownedshareLabel"]').textContent = `${v}% Web`;
-  });
-  recalc();
+function renderProj(bk){
+  const sk=bk.replace(/\s/g,'_');
+  const s=ALL.summary[bk];
+  const d26=ALL.data[bk]['2026'].total;
+  const d25=ALL.data[bk]['2025'].total;
+  const labels=Array.from({length:30},(_,i)=>`D${i+1}`);
+  const actual=[...d26,...Array(REMAINING).fill(null)];
+  const projD=[...Array(17).fill(null),d26[16]/1e9,...Array(REMAINING-1).fill(s.avg_all/1e9)];
+  const sets=[];
+  if(bk!=='TYGA') sets.push(ds('2025 Full Ramadan',d25,C.gold,true));
+  sets.push({label:'2026 Actuals',data:actual.map(v=>v!=null?v/1e9:null),borderColor:C.teal,backgroundColor:C.teal+'18',fill:true,borderWidth:2,pointRadius:2,tension:0.3,spanGaps:false,pointBackgroundColor:C.teal});
+  sets.push({label:'Projected (run rate)',data:projD,borderColor:'#6366f1',backgroundColor:'#6366f110',fill:true,borderWidth:2,borderDash:[6,3],pointRadius:2,tension:0.3,spanGaps:false,pointBackgroundColor:'#6366f1'});
+  destroyC(`cp-${sk}`);
+  const ctx=document.getElementById(`cp-${sk}`);if(!ctx)return;
+  const o={...baseO(),plugins:{...baseO().plugins,legend:{display:true,position:'bottom',labels:{font:{size:10},padding:10}}}};
+  acharts[`cp-${sk}`]=new Chart(ctx,{type:'line',data:{labels,datasets:sets},options:o});
 }
 
-/* -----------------------------
-   Export to Excel Logic
------------------------------ */
-function exportToExcel() {
-  const wb = XLSX.utils.book_new();
-
-  // 1. Prepare Inputs Data
-  const inputsData = [
-    ["Brand", "Shopify%", "Web Sales", "Web Trx", "App Sales", "App Trx", "MP Sales", "MP Trx", "Projected Website Share"]
-  ];
-  
-  const inputRows = Array.from(el("inputRows").children).slice(1); // skip total
-  const growthPct = getGrowthValue();
-
-  inputRows.forEach(tri => {
-     const b = tri.__brandMeta;
-     const web = parseNumber(tri.querySelector('[data-k="web"]').value);
-     const web_trx = parseNumber(tri.querySelector('[data-k="web_trx"]').value);
-     const app = parseNumber(tri.querySelector('[data-k="app"]').value);
-     const app_trx = parseNumber(tri.querySelector('[data-k="app_trx"]').value);
-     const mp = parseNumber(tri.querySelector('[data-k="mp"]').value);
-     const mp_trx = parseNumber(tri.querySelector('[data-k="mp_trx"]').value);
-     const share = parseNumber(tri.querySelector('[data-k="ownedshare"]').value);
-     
-     inputsData.push([b.name, b.shopifyPct/100, web, web_trx, app, app_trx, mp, mp_trx, share/100]);
-  });
-  // Append Global Growth to Inputs Sheet
-  inputsData.push(["", "", "", "", "", "", "", "Global Sales Growth %:", growthPct/100]);
-
-  const wsInputs = XLSX.utils.aoa_to_sheet(inputsData);
-  XLSX.utils.book_append_sheet(wb, wsInputs, "Inputs");
-
-  // 2. Prepare Projections Data
-  const projData = [
-    ["Brand", "Proj. Web Sales", "Proj. App Sales", "Proj. MP Sales", "Proj. Web Trx", "Proj. App Trx", "Proj. MP Trx", "Baseline Fee", "Projected Fee", "Delta Fee", "Delta %"]
-  ];
-  
-  const mpPct = parseNumber(el("mpFeePct").value);
-  const mpPctProj = parseNumber(el("mpFeePctProj").value);
-  const tapcartPct = parseNumber(el("tapcartPct").value);
-  const midtransPerTrx = parseNumber(el("midtransPerTrx").value);
-  const fsEligiblePct = parseNumber(el("fsEligiblePct").value);
-  const fsAvgSubsidy = parseNumber(el("fsAvgSubsidy").value);
-
-  inputRows.forEach(tri => {
-    const b = tri.__brandMeta;
-    const web = parseNumber(tri.querySelector('[data-k="web"]').value);
-    const web_trx = parseNumber(tri.querySelector('[data-k="web_trx"]').value);
-    const app = parseNumber(tri.querySelector('[data-k="app"]').value);
-    const app_trx = parseNumber(tri.querySelector('[data-k="app_trx"]').value);
-    const mp = parseNumber(tri.querySelector('[data-k="mp"]').value);
-    const mp_trx = parseNumber(tri.querySelector('[data-k="mp_trx"]').value);
-    const ownedSharePct = parseNumber(tri.querySelector('[data-k="ownedshare"]').value);
-
-    const r = calcBrand({
-      web, web_trx, app, app_trx, mp, mp_trx,
-      shopifyPct: b.shopifyPct, mpPct, mpPctProj, tapcartPct, midtransPerTrx, fsEligiblePct, fsAvgSubsidy, ownedSharePct,
-      growthPct
+function renderCharts(bk){
+  const sk=bk.replace(/\s/g,'_');
+  const d=ALL.data[bk];
+  const isNew=bk==='TYGA';
+  renderMain(bk,'d17');
+  if(!isNew){
+    ['Marketplace','Own Store','Franchise','Website'].forEach((ch,ci)=>{
+      const key=['mkt','own','fra','web'][ci];
+      mkLine(`cc-${sk}-${key}`,[ds('2025',d['2025'].channels[ch].slice(0,17),C.gold,true),ds('2026',d['2026'].channels[ch],Object.values(CHC)[ci],false,true)],DL17,true);
     });
+  }
+  renderProj(bk);
+  if(bk==='__group__'){
+    const sorted=[...ALL.brands].sort((a,b)=>ALL.summary[b].t26_17-ALL.summary[a].t26_17);
+    mkBar(`cg-${sk}`,sorted.map(b=>({label:b,data:ALL.brandDaily26[b].map(v=>v/1e9),backgroundColor:BC[b]+'bb',borderColor:BC[b],borderWidth:1,borderRadius:2})),DL17,true);
+  }
+  buildTbl(bk);
+}
 
-    projData.push([
-      b.name, 
-      r.webP, r.appP, r.mpP, 
-      r.webTrxP, r.appTrxP, r.mpTrxP, 
-      r.baseFee, r.projFee, r.delta, r.deltaPct/100
-    ]);
+// TABLE: BS uses B; others use full IDR numbers in millions
+function buildTbl(bk){
+  const sk=bk.replace(/\s/g,'_');
+  const tbody=document.getElementById(`tb-${sk}`);
+  if(!tbody)return;
+  const isNew=bk==='TYGA'; const isBS=bk==='Buttonscarves';
+  const d=ALL.data[bk];
+  const ev=EV[bk]||{};
+  for(let i=0;i<17;i++){
+    const t25=d['2025'].total[i], t26=d['2026'].total[i];
+    const g=isNew?null:pct(t25,t26);
+    const gc=g===null?'':g>=100?'td-wow':g>=0?'td-pos':'td-neg';
+    const s=v=>v>=0?'+':'';
+    let evHtml='—';
+    if(EV_LBL[i]){
+      const cls=EV_CLS[i];
+      const show=(cls==='mrf'&&ev.mrf)||(cls==='smb'&&ev.smb)||(cls==='gema'&&ev.gema);
+      if(show) evHtml=`<span class="ev-${cls}">${EV_LBL[i]}</span>`;
+    }
+    // Format: BS = B, others = show IDR full value in millions format
+    const fv=(v)=>isBS?B(v):`${Math.round(v).toLocaleString('en-US')}`;
+    tbody.innerHTML+=`<tr>
+      <td>Day ${i+1}</td>
+      <td>${DATES_25[i]}</td>
+      <td>${DATES_26[i]}</td>
+      ${isNew?'':`<td>${fv(t25)}</td>`}
+      <td>${fv(t26)}</td>
+      ${isNew?'':`<td class="${gc}">${g!==null?s(g)+g+'%':'—'}</td>`}
+      <td>${evHtml}</td>
+    </tr>`;
+  }
+}
+
+// BUILD TAB
+function buildTab(bk){
+  const sk=bk.replace(/\s/g,'_');
+  const s=ALL.summary[bk];
+  const info=BRAND_INFO[bk]||{};
+  const ev=EV[bk]||{};
+  const isNew=bk==='TYGA', isGroup=bk==='__group__', isBS=bk==='Buttonscarves';
+  const bname=isGroup?'Modinity Group':bk;
+  const g=s.g_17; const gc=g===null?'na':g>=0?'pos':'neg';
+  const gs=g===null?'New Brand':`${sign(g)}${g}%`;
+  const evPct=s.t26_17>0?Math.round(s.ev26_17/s.t26_17*100):0;
+  const projG=s.t25_full>0?pct(s.t25_full,s.proj_all):null;
+  const projGC=projG===null?'na':projG>=0?'pos':'neg';
+  const ahead=s.needed_full<=0;
+  const esData=EXEC_SUMMARY[bk]||{title:'',body:''};
+
+  // KPI
+  const kpi=isNew?`<div class="kpi-row">
+    <div class="kpi-card teal"><div class="kpi-lbl">2026 D1–17 Actuals</div><div class="kpi-main">IDR ${fmt(s.t26_17)}</div><div class="kpi-badge na">New Brand — No 2025 Benchmark</div><div class="kpi-ref">TYGA's first Ramadan cycle. Run-rate projection available below.</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">Event Sales D1–17</div><div class="kpi-main">—</div><div class="kpi-ref">TYGA did not participate in MRF, SMB, or Gema Ramadan. All revenue is organic.</div></div>
+  </div>`:`<div class="kpi-row">
+    <div class="kpi-card teal"><div class="kpi-lbl">2026 D1–17 Actuals</div><div class="kpi-main">IDR ${fmt(s.t26_17)}</div><div class="kpi-badge ${gc}">${gs} vs 2025 D1–17</div><div class="kpi-ref"><strong>2025 D1–17:</strong> IDR ${fmt(s.t25_17)}<br><strong>2025 Full Ramadan:</strong> IDR ${fmt(s.t25_full)}</div></div>
+    <div class="kpi-card amber"><div class="kpi-lbl">2026 Event Sales D1–17</div><div class="kpi-main">IDR ${fmt(s.ev26_17)}</div><div class="kpi-badge ${evPct>40?'neg':'pos'}">${evPct}% of total D1–17 revenue</div><div class="kpi-ref"><strong>Non-event revenue:</strong> IDR ${fmt(s.ne26_17)}<br>Events: ${ev.mrf?'MRF ':''}${ev.smb?'SMB ':''}${ev.gema?'Gema Ramadan':''}</div></div>
+  </div>`;
+
+  // Brand mix (group only)
+  const sorted=[...ALL.brands].sort((a,b)=>ALL.summary[b].t26_17-ALL.summary[a].t26_17);
+  const groupMix=!isGroup?'':` 
+    <div class="sh" style="margin-top:28px;"><span class="sn">02</span><span class="st">Brand Contribution — 2026 D1–17</span></div>
+    <div class="sd">Sorted by revenue. ZytaDelia records the strongest YoY momentum.</div>
+    <div class="bmix-row">${sorted.map(b=>{const bs=ALL.summary[b];const share=Math.round(bs.t26_17/s.t26_17*100);const bg=bs.g_17;const gc=bg===null?'var(--muted)':bg>=0?'var(--green)':'var(--rose)';return`<div class="bmix-card" style="border-top-color:${BC[b]}"><div class="bmix-name" style="color:${BC[b]}">${b}</div><div class="bmix-share">${share}%</div><div class="bmix-idr">IDR ${fmt(bs.t26_17)}</div><div class="bmix-g" style="color:${gc}">${bg!==null?sign(bg)+bg+'%':'New'} YoY</div></div>`;}).join('')}</div>
+    <div class="card"><div class="card-title">Group Daily Sales — All Brands Stacked (IDR Billions)</div><div class="card-sub" style="margin-bottom:12px;">Each band = one brand's daily contribution through Day 17.</div>
+    <div class="legend" style="margin-bottom:12px;">${ALL.brands.map(b=>`<div class="li"><div class="ll" style="background:${BC[b]};height:8px;border-radius:2px;"></div>${b}</div>`).join('')}</div>
+    <div class="chart-wrap h300"><canvas id="cg-${sk}"></canvas></div></div>`;
+
+  // Trend section
+  const trendSect=`
+    <div class="sh" style="margin-top:${isGroup?'0':'28px'};"><span class="sn">${isGroup?'03':'02'}</span><span class="st">Daily Sales Trend</span></div>
+    <div class="sd">Compare 2026 actuals against 2025. Toggle to switch between like-for-like D1–17 or full-season context.</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div><div class="card-title">Total Sales per Ramadan Day (IDR Billions)</div></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div class="legend"><div class="li"><div class="ll" style="background:var(--gold);opacity:.8;"></div>2025</div><div class="li"><div class="ll" style="background:var(--teal);"></div>2026</div></div>
+          <div class="tgl-row" id="tgl-${sk}">
+            <button class="tgl active" data-m="d17" style="padding:5px 12px;font-size:10px;font-weight:600;cursor:pointer;border:none;background:var(--ink);color:#fff;" onclick="renderMain('${bk}','d17')">vs 2025 D1–17</button>
+            <button class="tgl" data-m="full" style="padding:5px 12px;font-size:10px;font-weight:600;cursor:pointer;border:none;background:var(--bg);color:var(--muted);" onclick="renderMain('${bk}','full')">vs 2025 Full</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap ${isGroup?'h300':'h260'}"><canvas id="cm-${sk}"></canvas></div>
+      ${(ev.mrf||ev.smb||ev.gema)?`<div class="anns">${ev.mrf?'<span class="ann ann-mrf">🏟 Days 1–4: MRF</span>':''}${ev.smb?'<span class="ann ann-smb">🏪 Days 7–10: SMB</span>':''}${ev.gema?'<span class="ann ann-gema">✨ Days 16–17: Gema Ramadan</span>':''}${isGroup||isBS?'<span class="ann ann-info">* Day 10 Dept Store batch may inflate total</span>':''}</div>`:''}
+      ${buildPhases(bk)}
+    </div>`;
+
+  // Channel section
+  const chSect=isNew?'':` 
+    <div class="sh" style="margin-top:28px;"><span class="sn">${isGroup?'04':'03'}</span><span class="st">Channel Performance D1–17</span></div>
+    <div class="sd">Dashed gold = 2025 daily; solid = 2026 daily.</div>
+    <div class="ch-grid">${['Marketplace','Own Store','Franchise','Website'].map((ch,ci)=>{const chK=['mkt','own','fra','web'][ci];const chColor=Object.values(CHC)[ci];const t25=ALL.data[bk]['2025'].channels[ch].slice(0,17).reduce((a,b)=>a+b,0);const t26=ALL.data[bk]['2026'].channels[ch].reduce((a,b)=>a+b,0);const g2=pct(t25,t26);const bc=g2===null?'na':g2>=100?'wow':g2>=0?'pos':'neg';const sites=['Shopee, Tokopedia, TikTok','Brand-operated physical stores','Franchisee-operated stores',info.site||''][ci];return`<div class="ch-card ${chK}"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;"><div><div class="ch-name" style="color:${chColor}">${ch}</div><div class="ch-type">${sites}</div></div><span class="ch-badge ${bc}">${g2!==null?sign(g2)+g2+'%':'—'}</span></div><div class="ch-stats"><div><div class="cs-lbl">2025 D1-17</div><div class="cs-val" style="color:var(--gold)">${fmt(t25)}</div></div><div><div class="cs-lbl">2026 D1-17</div><div class="cs-val" style="color:${chColor}">${fmt(t26)}</div></div></div><div class="chart-wrap h130"><canvas id="cc-${sk}-${chK}"></canvas></div></div>`;}).join('')}</div>`;
+
+  // Projection
+  const projSect=`
+    <div class="sh" style="margin-top:28px;"><span class="sn">${isNew?'03':isGroup?'05':'04'}</span><span class="st">Full-Ramadan Projection</span></div>
+    <div class="sd">Run-rate projection to Day 30 (20 Mar 2026) based on D1–17 daily average.</div>
+    <div class="proj-hero">
+      <div class="proj-headline">Projected Full Ramadan 2026 (30 Days)</div>
+      <div class="proj-amount">IDR ${fmt(s.proj_all)}</div>
+      ${isNew?`<div class="proj-gbadge na">New brand — no 2025 full Ramadan benchmark</div>`:`<div class="proj-gbadge ${projGC}">${sign(projG)}${projG}% vs 2025 Full Ramadan (IDR ${fmt(s.t25_full)})</div>`}
+      <div class="proj-sub">Run rate: <strong>IDR ${fmt(s.avg_all)}/day</strong> average (D1–17) × ${REMAINING} remaining days (Day 18–30)</div>
+      <div class="proj-meta">
+        <div class="pmc"><div class="pmc-l">D1–17 Actuals</div><div class="pmc-v">IDR ${fmt(s.t26_17)}</div><div class="pmc-s">${Math.round(s.t26_17/s.proj_all*100)}% of projection achieved</div></div>
+        <div class="pmc"><div class="pmc-l">Remaining Days</div><div class="pmc-v">${REMAINING} days</div><div class="pmc-s">Day 18–30 · until 20 Mar</div></div>
+        <div class="pmc" style="${ahead&&!isNew?'background:var(--green-pale);border-color:#86efac;':''}">
+          <div class="pmc-l">${isNew?'Run Rate/Day':ahead?'Gap vs 2025 Full':'Still Needed'}</div>
+          <div class="pmc-v" style="color:${isNew?'var(--ink)':ahead?'var(--green)':'var(--rose)'}">
+            ${isNew?`IDR ${fmt(s.avg_all)}`:ahead?`+IDR ${fmt(Math.abs(s.needed_full))}`:`IDR ${fmt(s.needed_full)}`}
+          </div>
+          <div class="pmc-s">${isNew?'per day avg':ahead?'Projection exceeds 2025 full total':`= IDR ${fmt(s.needed_per_day)} /day needed D18–30`}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Sales Trajectory — Actuals vs Projection</div><div class="card-sub">Gold dashed = 2025 full. Teal = 2026 actuals through Day 17. Purple dashed = projected trajectory.</div><div class="chart-wrap h260"><canvas id="cp-${sk}"></canvas></div></div>`;
+
+  // Table
+  const isSmall = !isBS;
+  const tblSect=`
+    <div class="sh" style="margin-top:28px;"><span class="sn">${isNew?'04':isGroup?'06':'05'}</span><span class="st">Full Daily Breakdown</span></div>
+    <div class="sd">Day-by-day actuals for both years with event context. ${isSmall?'Sales in IDR (full value).':''}</div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr>
+        <th style="text-align:left">Day</th><th style="text-align:left">2025 Date</th><th style="text-align:left">2026 Date</th>
+        ${isNew?'':`<th>2025 Total ${isSmall?'(IDR)':'(IDR B)'}</th>`}
+        <th>2026 Total ${isSmall?'(IDR)':'(IDR B)'}</th>
+        ${isNew?'':`<th>Growth</th>`}
+        <th>Event</th>
+      </tr></thead>
+      <tbody id="tb-${sk}"></tbody>
+    </table>
+    ${isSmall?`<div class="tbl-note">* Sales shown in full IDR value with comma separators.</div>`:''}
+    </div>`;
+
+  return `
+    <div class="bh">
+      <div>
+        <div class="bh-tag">${isGroup?'Modinity Group · All Brands Combined':info.type}</div>
+        <h1 class="bh-title">${isGroup?'Modinity Group<br><em>Ramadan Performance</em>':`${bname}<br><em>Ramadan Analysis</em>`}</h1>
+        <div class="bh-meta">
+          ${isGroup?'<strong>7 Brands:</strong> Buttonscarves, Benang Jarum, BS Beauty, ZytaDelia, Nada Puspita, Calla The Label, TYGA':`<strong>${info.site}</strong> · ${info.desc}`}<br>
+          <strong>2025:</strong> 1–31 Mar &nbsp;|&nbsp; <strong>2026:</strong> 19 Feb – 7 Mar (Day 17) &nbsp;|&nbsp; Ramadan ends ~20 Mar 2026
+        </div>
+      </div>
+      <div style="text-align:right;padding-top:4px;">
+        <div style="font-size:10px;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Day 17 of 30</div>
+        <div class="bh-badge">Updated 7 Mar 2026</div>
+      </div>
+    </div>
+
+    ${kpi}
+
+    <div class="exec-summary">
+      <div class="es-label">Executive Summary</div>
+      <div class="es-title">${esData.title}</div>
+      <div class="es-body">${esData.body}</div>
+    </div>
+
+    <div class="sh"><span class="sn">01</span><span class="st">Event Participation</span></div>
+    <div class="sd">Events ${bname} participated in during Ramadan 2026.</div>
+    ${buildTL(bk)}
+
+    ${groupMix}
+    ${trendSect}
+    ${chSect}
+    ${projSect}
+    ${tblSect}
+
+    <div class="pg-footer">
+      <div class="pf-brand">Modinity Group · ${bname} · March 2026</div>
+      <div class="pf-notes">Ramadan 2026: 19 Feb – 20 Mar (30 days) · Data through Day 17 (7 Mar)<br>Projection = D1–17 daily avg × remaining 13 days · * Dept Store batch note: Day 10 2026</div>
+    </div>`;
+}
+
+function switchTab(bk,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
+  const el=document.getElementById('tab-'+bk.replace(/\s/g,'_'));
+  if(el){el.classList.add('active');if(!rendered.has(bk)){rendered.add(bk);renderCharts(bk);}}
+}
+
+function init(){
+  const order=['__group__',...ALL.brands];
+  const container=document.getElementById('tab-contents');
+  order.forEach((b,idx)=>{
+    const sk=b.replace(/\s/g,'_');
+    const div=document.createElement('div');
+    div.className='tab-content'+(idx===0?' active':'');
+    div.id='tab-'+sk;
+    div.innerHTML=buildTab(b);
+    container.appendChild(div);
   });
-  
-  const wsProj = XLSX.utils.aoa_to_sheet(projData);
-  XLSX.utils.book_append_sheet(wb, wsProj, "Projections");
-
-  // Unique Filename with Timestamp
-  const now = new Date();
-  // Format: YYYY-MM-DD_HH-mm-ss
-  const pad = (n) => String(n).padStart(2, '0');
-  const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-  
-  XLSX.writeFile(wb, `Modinity_Fee_Simulation_${timestamp}.xlsx`);
+  rendered.add('__group__');
+  renderCharts('__group__');
 }
-el("exportBtn").addEventListener("click", exportToExcel);
-
-
-/* -----------------------------
-   Init
------------------------------ */
-function setTheme(mode) {
-  const root = document.documentElement;
-  if (mode === "dark") root.classList.add("dark");
-  else root.classList.remove("dark");
-  applyChartTheme();
-  localStorage.setItem("theme", mode);
-  el("themeLabel").textContent = (mode === "dark") ? "Light" : "Dark";
-}
-function initTheme() {
-  const saved = localStorage.getItem("theme");
-  setTheme(saved === "dark" ? "dark" : "light");
-}
-el("themeBtn").addEventListener("click", () => {
-  const isDark = document.documentElement.classList.contains("dark");
-  setTheme(isDark ? "light" : "dark");
-});
-
-function setGlobalToWeightedBaseline() {
-  let tot = 0, owned = 0;
-  const rows = Array.from(el("inputRows").children).slice(1);
-  rows.forEach(tri => {
-    const w = parseNumber(tri.querySelector('[data-k="web"]').value);
-    const a = parseNumber(tri.querySelector('[data-k="app"]').value);
-    const m = parseNumber(tri.querySelector('[data-k="mp"]').value);
-    tot += (w+a+m);
-    owned += (w+a);
-  });
-  const weighted = tot ? Math.round((owned/tot)*100) : 0;
-  el("globalOwnedShare").value = String(weighted);
-  el("globalShareLabel").textContent = `${weighted}%`;
-}
-
-function resetDefaults() {
-  el("mpFeePct").value = "14"; el("mpFeePctProj").value = "18"; el("tapcartPct").value = "0.07"; el("midtransPerTrx").value = "7,500"; el("fsEligiblePct").value = "67"; el("fsAvgSubsidy").value = "40,000"; 
-  // Reset Growth
-  el("growthSlider").value = "0"; 
-  el("growthInput").value = "0";
-  el("growthCustomToggle").checked = false;
-  el("growthSliderContainer").classList.remove("hidden");
-  el("growthInputContainer").classList.add("hidden");
-  updateGrowthDisplay();
-
-  buildTables(); setGlobalToWeightedBaseline(); recalc();
-}
-el("resetBtn").addEventListener("click", resetDefaults);
-
-function switchDataset(which) {
-  ACTIVE_DATASET = (which === "month") ? DATASET_MONTH : DATASET_DAY1;
-  buildTables(); setGlobalToWeightedBaseline(); recalc();
-}
-el("dsDay1").addEventListener("change", () => { if (el("dsDay1").checked) switchDataset("day1"); });
-el("dsMonth").addEventListener("change", () => { if (el("dsMonth").checked) switchDataset("month"); });
-
-initTheme();
-buildTables();
-setGlobalToWeightedBaseline();
-updateGrowthDisplay();
-// recalc is called by updateGrowthDisplay
-
-el("globalOwnedShare").addEventListener("input", (e) => applyGlobalShare(e.target.value));
-["mpFeePct","mpFeePctProj","tapcartPct","midtransPerTrx","fsEligiblePct","fsAvgSubsidy"].forEach(id => {
-  el(id).addEventListener("input", recalc);
-  // Apply formatting logic
-  attachNumberFormatting(el(id));
-});
-// Attach formatting to growth input too just in case
-attachNumberFormatting(el("growthInput"));
-
+init();
 </script>
 </body>
 </html>
